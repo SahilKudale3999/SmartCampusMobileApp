@@ -1,1 +1,11 @@
+# Ignore metadata folder
 /.metadata/
+.metadata/
+
+# Ignore all log files
+*.log
+
+# Ignore application config
+Backend/smart-campus/src/main/resources/application.properties
+
+.myapp.log
