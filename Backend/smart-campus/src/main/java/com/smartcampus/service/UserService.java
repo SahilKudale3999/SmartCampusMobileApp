@@ -11,6 +11,17 @@ import com.smartcampus.repository.UserRepository;
 @Service
 public class UserService {
 	
+	@Autowired
+	private UserRepository userRepository;
+	
+	public User  addUser(User user) {
+		
+		if(userRepository.existsByEmail(user.getEmail())) {
+			throw new RuntimeException("Email already exists");
+		}
+		return userRepository.save(user);
+	}
+	
 	
 	
 	
