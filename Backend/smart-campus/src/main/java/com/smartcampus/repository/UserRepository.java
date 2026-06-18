@@ -1,4 +1,11 @@
 package com.smartcampus.repository;
 
-public interface UserRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.smartcampus.dto.UserDto;
+import com.smartcampus.entity.User;
+
+public interface UserRepository extends JpaRepository<User, Integer>{
+
+	
 }
