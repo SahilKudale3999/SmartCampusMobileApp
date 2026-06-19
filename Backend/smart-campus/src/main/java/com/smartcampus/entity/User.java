@@ -1,5 +1,6 @@
 package com.smartcampus.entity;
 
+import com.smartcampus.util.Role;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -10,7 +11,6 @@ import lombok.*;
 @Getter
 @Setter
 @Builder
-@ToString
 public class User {
 
     @Id
@@ -30,8 +30,9 @@ public class User {
     @Column(name = "phone_no", length = 15)
     private String phoneNo;
 
-    @Column(name = "role", nullable = false, length = 20)
-    private String role;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false)
+    private Role role;
 
     @Column(name = "is_active")
     private Boolean isActive;
