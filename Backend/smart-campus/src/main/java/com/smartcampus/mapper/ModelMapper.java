@@ -2,11 +2,14 @@ package com.smartcampus.mapper;
 
 import com.smartcampus.dto.CourseRequest;
 import com.smartcampus.dto.CourseResponse;
+import com.smartcampus.dto.FacultyRequest;
+import com.smartcampus.dto.FacultyResponse;
 import com.smartcampus.dto.StudentRequest;
 import com.smartcampus.dto.StudentResponse;
 import com.smartcampus.dto.UserRequest;
 import com.smartcampus.dto.UserResponse;
 import com.smartcampus.entity.Course;
+import com.smartcampus.entity.Faculty;
 import com.smartcampus.entity.Student;
 import com.smartcampus.entity.User;
 
@@ -91,4 +94,32 @@ public class ModelMapper {
                 .rollNo(request.getRollNo())
                 .build();
     }
+
+
+		public static FacultyResponse toFacultyResponse(Faculty faculty) {
+		    if (faculty == null) {
+		        return null;
+		    }
+		    return FacultyResponse.builder()
+		            .facultyId(faculty.getFacultyId())
+		            .userId(faculty.getUserId().getUserId())
+		            .fullName(faculty.getUserId().getFullName())
+		            .email(faculty.getUserId().getEmail())
+		            .role(faculty.getUserId().getRole())
+		            .department(faculty.getDepartment())
+		            .build();
+		}
+		
+		
+		
+		
+		public static Faculty toFacultyEntity(FacultyRequest request, User user) {
+		    if (request == null || user == null ) {
+		        return null;
+		    }
+		    return Faculty.builder()
+		            .userId(user)
+		            .department(request.getDepartment())
+		            .build();
+		}
 }
