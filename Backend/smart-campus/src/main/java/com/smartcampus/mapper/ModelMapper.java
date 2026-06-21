@@ -6,11 +6,14 @@ import com.smartcampus.dto.FacultyRequest;
 import com.smartcampus.dto.FacultyResponse;
 import com.smartcampus.dto.StudentRequest;
 import com.smartcampus.dto.StudentResponse;
+import com.smartcampus.dto.SubjectRequest;
+import com.smartcampus.dto.SubjectResponse;
 import com.smartcampus.dto.UserRequest;
 import com.smartcampus.dto.UserResponse;
 import com.smartcampus.entity.Course;
 import com.smartcampus.entity.Faculty;
 import com.smartcampus.entity.Student;
+import com.smartcampus.entity.Subject;
 import com.smartcampus.entity.User;
 
 public class ModelMapper {
@@ -120,6 +123,33 @@ public class ModelMapper {
 		    return Faculty.builder()
 		            .userId(user)
 		            .department(request.getDepartment())
+		            .build();
+		}
+		
+		
+		public static SubjectResponse toSubjectResponse(Subject subject) {
+			
+		    if (subject == null) {
+		        return null;
+		    }
+		    return SubjectResponse.builder()
+		    		
+		            .subjectId(subject.getSubjectId())
+		            .subjectName(subject.getSubjectName())
+		            .courseId(subject.getCourse().getCourseId())
+		            .courseName(subject.getCourse().getCourseName())
+		            .facultyId(subject.getFaculty().getFacultyId())
+		            .build();
+		}
+		
+		public static Subject toSubjectEntity(SubjectRequest request,Course course ,  Faculty faculty) {
+		    if (request == null || course == null || faculty == null ) {
+		        return null;
+		    }
+		    return Subject.builder()
+		            .subjectName(request.getSubjectName())
+		            .course(course)
+		            .faculty(faculty)
 		            .build();
 		}
 }
