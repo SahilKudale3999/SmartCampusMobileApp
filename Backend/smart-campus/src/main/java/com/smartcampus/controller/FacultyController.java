@@ -35,7 +35,7 @@ public class FacultyController {
 	public ResponseEntity<ApiResponse<FacultyResponse>> createFaculty(@Valid @RequestBody FacultyRequest request){
 	
 		 return ResponseEntity.status(HttpStatus.CREATED)
-	                .body(new ApiResponse<>(true, "Student created",facultyService.createFaculty(request)));
+	                .body(new ApiResponse<>(true, "Faculty created",facultyService.createFaculty(request)));
 	}
 	
 	@GetMapping
