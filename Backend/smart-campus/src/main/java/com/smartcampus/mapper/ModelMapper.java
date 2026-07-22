@@ -10,6 +10,8 @@ import com.smartcampus.dto.StudentRequest;
 import com.smartcampus.dto.StudentResponse;
 import com.smartcampus.dto.SubjectRequest;
 import com.smartcampus.dto.SubjectResponse;
+import com.smartcampus.dto.SubmissionRequest;
+import com.smartcampus.dto.SubmissionResponse;
 import com.smartcampus.dto.UserRequest;
 import com.smartcampus.dto.UserResponse;
 import com.smartcampus.entity.Assignment;
@@ -17,6 +19,7 @@ import com.smartcampus.entity.Course;
 import com.smartcampus.entity.Faculty;
 import com.smartcampus.entity.Student;
 import com.smartcampus.entity.Subject;
+import com.smartcampus.entity.Submission;
 import com.smartcampus.entity.User;
 
 public class ModelMapper {
@@ -180,6 +183,34 @@ public class ModelMapper {
 		            .title(request.getTitle())
 		            .description(request.getDescription())
 		            .deadline(request.getDeadline())
+		            .build();
+		}
+
+		public static SubmissionResponse toSubmissionResponse(Submission submission) {
+		    if (submission == null) {
+		        return null;
+		    }
+		    return SubmissionResponse.builder()
+		            .submissionId(submission.getSubmissionId())
+		            .assignmentId(submission.getAssignment().getAssignmentId())
+		            .assignmentTitle(submission.getAssignment().getTitle())
+		            .studentId(submission.getStudent().getStudentId())
+		            .studentName(submission.getStudent().getUser().getFullName())
+		            .fileUrl(submission.getFileUrl())
+		            .submittedAt(submission.getSubmittedAt())
+		            .gradeScore(submission.getGradeScore())
+		            .build();
+		}
+
+		public static Submission toSubmissionEntity(SubmissionRequest request, Assignment assignment, Student student) {
+		    if (request == null || assignment == null || student == null) {
+		        return null;
+		    }
+		    return Submission.builder()
+		            .assignment(assignment)
+		            .student(student)
+		            .fileUrl(request.getFileUrl())
+		            .gradeScore(request.getGradeScore())
 		            .build();
 		}
 }
