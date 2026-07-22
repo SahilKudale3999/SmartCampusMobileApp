@@ -1,5 +1,7 @@
 package com.smartcampus.mapper;
 
+import com.smartcampus.dto.AssignmentRequest;
+import com.smartcampus.dto.AssignmentResponse;
 import com.smartcampus.dto.CourseRequest;
 import com.smartcampus.dto.CourseResponse;
 import com.smartcampus.dto.FacultyRequest;
@@ -8,12 +10,16 @@ import com.smartcampus.dto.StudentRequest;
 import com.smartcampus.dto.StudentResponse;
 import com.smartcampus.dto.SubjectRequest;
 import com.smartcampus.dto.SubjectResponse;
+import com.smartcampus.dto.SubmissionRequest;
+import com.smartcampus.dto.SubmissionResponse;
 import com.smartcampus.dto.UserRequest;
 import com.smartcampus.dto.UserResponse;
+import com.smartcampus.entity.Assignment;
 import com.smartcampus.entity.Course;
 import com.smartcampus.entity.Faculty;
 import com.smartcampus.entity.Student;
 import com.smartcampus.entity.Subject;
+import com.smartcampus.entity.Submission;
 import com.smartcampus.entity.User;
 
 public class ModelMapper {
@@ -150,6 +156,61 @@ public class ModelMapper {
 		            .subjectName(request.getSubjectName())
 		            .course(course)
 		            .faculty(faculty)
+		            .build();
+		}
+
+		public static AssignmentResponse toAssignmentResponse(Assignment assignment) {
+		    if (assignment == null) {
+		        return null;
+		    }
+		    return AssignmentResponse.builder()
+		            .assignmentId(assignment.getAssignmentId())
+		            .subjectId(assignment.getSubject().getSubjectId())
+		            .subjectName(assignment.getSubject().getSubjectName())
+		            .title(assignment.getTitle())
+		            .description(assignment.getDescription())
+		            .deadline(assignment.getDeadline())
+		            .createdAt(assignment.getCreatedAt())
+		            .build();
+		}
+
+		public static Assignment toAssignmentEntity(AssignmentRequest request, Subject subject) {
+		    if (request == null || subject == null) {
+		        return null;
+		    }
+		    return Assignment.builder()
+		            .subject(subject)
+		            .title(request.getTitle())
+		            .description(request.getDescription())
+		            .deadline(request.getDeadline())
+		            .build();
+		}
+
+		public static SubmissionResponse toSubmissionResponse(Submission submission) {
+		    if (submission == null) {
+		        return null;
+		    }
+		    return SubmissionResponse.builder()
+		            .submissionId(submission.getSubmissionId())
+		            .assignmentId(submission.getAssignment().getAssignmentId())
+		            .assignmentTitle(submission.getAssignment().getTitle())
+		            .studentId(submission.getStudent().getStudentId())
+		            .studentName(submission.getStudent().getUser().getFullName())
+		            .fileUrl(submission.getFileUrl())
+		            .submittedAt(submission.getSubmittedAt())
+		            .gradeScore(submission.getGradeScore())
+		            .build();
+		}
+
+		public static Submission toSubmissionEntity(SubmissionRequest request, Assignment assignment, Student student) {
+		    if (request == null || assignment == null || student == null) {
+		        return null;
+		    }
+		    return Submission.builder()
+		            .assignment(assignment)
+		            .student(student)
+		            .fileUrl(request.getFileUrl())
+		            .gradeScore(request.getGradeScore())
 		            .build();
 		}
 }
