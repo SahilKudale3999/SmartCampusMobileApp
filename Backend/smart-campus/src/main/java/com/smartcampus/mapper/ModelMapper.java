@@ -4,6 +4,8 @@ import com.smartcampus.dto.AssignmentRequest;
 import com.smartcampus.dto.AssignmentResponse;
 import com.smartcampus.dto.CourseRequest;
 import com.smartcampus.dto.CourseResponse;
+import com.smartcampus.dto.EventRequest;
+import com.smartcampus.dto.EventResponse;
 import com.smartcampus.dto.FacultyRequest;
 import com.smartcampus.dto.FacultyResponse;
 import com.smartcampus.dto.NoticeRequest;
@@ -18,6 +20,7 @@ import com.smartcampus.dto.UserRequest;
 import com.smartcampus.dto.UserResponse;
 import com.smartcampus.entity.Assignment;
 import com.smartcampus.entity.Course;
+import com.smartcampus.entity.Event;
 import com.smartcampus.entity.Faculty;
 import com.smartcampus.entity.Notice;
 import com.smartcampus.entity.Student;
@@ -244,9 +247,37 @@ public class ModelMapper {
 		            .build();
 		}
 		
+		public static EventResponse toEventResponse(Event event) {
+
+		    if (event == null) {
+		        return null;
+		    }
+
+		    return EventResponse.builder()
+		            .eventId(event.getEventId())
+		            .eventName(event.getEventName())
+		            .description(event.getDescription())
+		            .venue(event.getVenue())
+		            .eventDate(event.getEventDate())
+		            .createdBy(event.getCreatedBy().getUserId())
+		            .createdByName(event.getCreatedBy().getFullName())
+		            .build();
+		}
 		
-		
-		
+		public static Event toEventEntity(EventRequest request, User user) {
+
+		    if (request == null || user == null) {
+		        return null;
+		    }
+
+		    return Event.builder()
+		            .eventName(request.getEventName())
+		            .description(request.getDescription())
+		            .venue(request.getVenue())
+		            .eventDate(request.getEventDate())
+		            .createdBy(user)
+		            .build();
+		}
 		
 		
 		
