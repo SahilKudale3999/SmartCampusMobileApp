@@ -6,6 +6,8 @@ import com.smartcampus.dto.CourseRequest;
 import com.smartcampus.dto.CourseResponse;
 import com.smartcampus.dto.FacultyRequest;
 import com.smartcampus.dto.FacultyResponse;
+import com.smartcampus.dto.NoticeRequest;
+import com.smartcampus.dto.NoticeResponse;
 import com.smartcampus.dto.StudentRequest;
 import com.smartcampus.dto.StudentResponse;
 import com.smartcampus.dto.SubjectRequest;
@@ -17,6 +19,7 @@ import com.smartcampus.dto.UserResponse;
 import com.smartcampus.entity.Assignment;
 import com.smartcampus.entity.Course;
 import com.smartcampus.entity.Faculty;
+import com.smartcampus.entity.Notice;
 import com.smartcampus.entity.Student;
 import com.smartcampus.entity.Subject;
 import com.smartcampus.entity.Submission;
@@ -213,4 +216,44 @@ public class ModelMapper {
 		            .gradeScore(request.getGradeScore())
 		            .build();
 		}
+		
+		public static NoticeResponse toNoticeResponse(Notice notice) {
+			if (notice == null) {
+		        return null;
+			}
+		    return NoticeResponse.builder()
+		            .noticeId(notice.getNoticeId())
+		            .title(notice.getTitle())
+		            .description(notice.getDescription())
+		            .createdBy(notice.getCreatedBy().getUserId())
+		            .createdByName(notice.getCreatedBy().getFullName())
+		            .createdAt(notice.getCreatedAt())
+		            .build();
+		}
+		
+		
+		public static Notice toNoticeEntity(NoticeRequest request, User user) {
+			
+			if (request == null ||user == null) {
+		        return null;
+			}
+		    return Notice.builder()
+		            .title(request.getTitle())
+		            .description(request.getDescription())
+		            .createdBy(user)
+		            .build();
+		}
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
 }
