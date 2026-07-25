@@ -1,5 +1,7 @@
 package com.smartcampus.service;
 
+import com.smartcampus.dto.LoginRequest;
+import com.smartcampus.dto.LoginResponse;
 import com.smartcampus.dto.UserRequest;
 import com.smartcampus.dto.UserResponse;
 import com.smartcampus.entity.User;
@@ -77,5 +79,28 @@ public class UserService {
     private User findUser(Integer id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+    }
+    
+    public LoginResponse login(LoginRequest request) {
+
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() ->
+                        new BadRequestException("Invalid email or password"));
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new BadRequestException("Invalid email or password");
+        }
+
+        if (!user.getIsActive()) {
+            throw new BadRequestException("User account is inactive");
+        }
+
+        return LoginResponse.builder()
+                .userId(user.getUserId())
+                .fullName(user.getFullName())
+                .email(user.getEmail())
+                .phoneNo(user.getPhoneNo())
+                .role(user.getRole())
+                .build();
     }
 }

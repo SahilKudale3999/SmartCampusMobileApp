@@ -1,5 +1,7 @@
 package com.smartcampus.controller;
 
+import com.smartcampus.dto.LoginRequest;
+import com.smartcampus.dto.LoginResponse;
 import com.smartcampus.dto.UserRequest;
 import com.smartcampus.dto.UserResponse;
 import com.smartcampus.service.UserService;
@@ -54,5 +56,10 @@ public class UserController {
     @PatchMapping("/{id}/deactivate")
     public ResponseEntity<ApiResponse<UserResponse>> deactivateUser(@PathVariable Integer id) {
         return ResponseEntity.ok(new ApiResponse<>(true, "User deactivated", userService.deactivateUser(id)));
+    }
+    
+    @PostMapping("/login")
+    public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
+        return ResponseEntity.ok(new ApiResponse<>(true,"Login successful",userService.login(request)));
     }
 }
