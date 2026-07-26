@@ -16,5 +16,5 @@ public class SubjectResponse {
     private Integer courseId;
     private String courseName;
     private Integer facultyId;
-    
+    private String facultyName;
 }

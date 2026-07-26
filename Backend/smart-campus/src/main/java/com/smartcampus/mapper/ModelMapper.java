@@ -151,6 +151,7 @@ public class ModelMapper {
 		            .courseId(subject.getCourse().getCourseId())
 		            .courseName(subject.getCourse().getCourseName())
 		            .facultyId(subject.getFaculty().getFacultyId())
+		            .facultyName(subject.getFaculty().getUserId().getFullName())
 		            .build();
 		}
 		
