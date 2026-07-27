@@ -16,5 +16,7 @@ public interface FacultyRepository extends JpaRepository<Faculty, Integer>{
 	boolean existsByUserIdUserId(Integer userId);
 	
 	 Optional<Faculty> findByDepartment(String department);
+	 
+	 Optional<Faculty> findByUserId(Integer userId);
 }
 
