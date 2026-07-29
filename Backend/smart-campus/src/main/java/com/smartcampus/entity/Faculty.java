@@ -26,7 +26,7 @@ public class Faculty {
 	
 	 @Id
 	 @GeneratedValue(strategy = GenerationType.IDENTITY)
-	 @Column(name = "faculty_id ")
+	 @Column(name = "faculty_id")
 	private Integer facultyId;
 	
 	 @OneToOne(fetch = FetchType.LAZY)

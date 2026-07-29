@@ -2,10 +2,13 @@ package com.smartcampus.controller;
 
 import com.smartcampus.dto.AuthRequest;
 import com.smartcampus.dto.AuthResponse;
+import com.smartcampus.dto.LoginResponse;
 import com.smartcampus.dto.UserRequest;
 import com.smartcampus.dto.UserResponse;
-import com.smartcampus.repository.UserRepository;
 import com.smartcampus.entity.User;
+import com.smartcampus.repository.FacultyRepository;
+import com.smartcampus.repository.StudentRepository;
+import com.smartcampus.repository.UserRepository;
 import com.smartcampus.service.JwtService;
 import com.smartcampus.service.UserService;
 import com.smartcampus.util.ApiResponse;
@@ -32,6 +35,8 @@ public class AuthController {
     private final UserDetailsService userDetailsService;
     private final JwtService jwtService;
     private final UserRepository userRepository;
+    private final StudentRepository studentRepository;
+    private final FacultyRepository facultyRepository;
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody AuthRequest request) {
@@ -42,16 +47,39 @@ public class AuthController {
         UserDetails userDetails = userDetailsService.loadUserByUsername(request.getEmail());
         String token = jwtService.generateToken(userDetails);
 
-        UserResponse userResponse = null;
+        LoginResponse userResponse = null;
+
         if (userDetails instanceof User user) {
-            userResponse = UserResponse.builder()
+            userResponse = LoginResponse.builder()
                     .userId(user.getUserId())
                     .fullName(user.getFullName())
                     .email(user.getEmail())
                     .phoneNo(user.getPhoneNo())
                     .role(user.getRole())
-                    .isActive(user.getIsActive())
                     .build();
+
+            // Handle Student profile details
+            if ("STUDENT".equals(user.getRole().name())) {
+                LoginResponse finalUserResponse = userResponse;
+                studentRepository.findByUserUserId(user.getUserId())
+                        .ifPresent(student -> {
+                            finalUserResponse.setStudentId(student.getStudentId());
+                            finalUserResponse.setRollNo(student.getRollNo());
+                            if (student.getCourse() != null) {
+                                finalUserResponse.setCourseId(student.getCourse().getCourseId());
+                                finalUserResponse.setCourseName(student.getCourse().getCourseName());
+                            }
+                        });
+            }
+
+            // Handle Faculty profile details
+            if ("FACULTY".equals(user.getRole().name())) {
+                LoginResponse finalUserResponse = userResponse;
+                facultyRepository.findByUserUserId(user.getUserId())
+                        .ifPresent(faculty -> {
+                            finalUserResponse.setFacultyId(faculty.getFacultyId());
+                        });
+            }
         }
 
         AuthResponse authResponse = new AuthResponse(token, userResponse);
@@ -61,10 +89,20 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<AuthResponse>> register(@Valid @RequestBody UserRequest request) {
         UserResponse createdUser = userService.createUser(request);
+
         UserDetails userDetails = userDetailsService.loadUserByUsername(createdUser.getEmail());
         String token = jwtService.generateToken(userDetails);
 
-        AuthResponse authResponse = new AuthResponse(token, createdUser);
+        LoginResponse loginResponse = LoginResponse.builder()
+                .userId(createdUser.getUserId())
+                .fullName(createdUser.getFullName())
+                .email(createdUser.getEmail())
+                .phoneNo(createdUser.getPhoneNo())
+                .role(createdUser.getRole())
+                .build();
+
+        AuthResponse authResponse = new AuthResponse(token, loginResponse);
+
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse<>(true, "Registration successful", authResponse));
     }

@@ -14,6 +14,11 @@ public class LoginResponse {
 
 	
 	private Integer userId;
+	private Integer studentId;
+	private Integer facultyId;
+	private Integer courseId;
+	private String courseName; 
+    private String rollNo;     
     private String fullName;
     private String email;
     private String phoneNo;

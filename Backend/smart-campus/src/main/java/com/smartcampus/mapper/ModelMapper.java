@@ -30,7 +30,7 @@ import com.smartcampus.entity.User;
 
 public class ModelMapper {
 
-	//course entityrequest mapper
+	
 	public static Course toCourseEntity(CourseRequest request) {
 		if (request == null) {
 			return null;
@@ -41,7 +41,7 @@ public class ModelMapper {
 	}
 
 
-	//course response mapper
+	
 	public static CourseResponse toCourseResponse(Course course) {
 		if (course == null) {
 			return null;
@@ -53,7 +53,7 @@ public class ModelMapper {
 	}
 
 
-	//user entityrequest mapper
+	
 	public static User toUserEntity(UserRequest request) {
 		if (request == null) {
 			return null;
@@ -151,6 +151,7 @@ public class ModelMapper {
 				.courseId(subject.getCourse().getCourseId())
 				.courseName(subject.getCourse().getCourseName())
 				.facultyId(subject.getFaculty().getFacultyId())
+				.facultyName(subject.getFaculty().getUserId().getFullName())
 				.build();
 	}
 
@@ -278,13 +279,5 @@ public class ModelMapper {
 				.createdBy(user)
 				.build();
 	}
-
-
-
-
-
-
-
-
 
 }

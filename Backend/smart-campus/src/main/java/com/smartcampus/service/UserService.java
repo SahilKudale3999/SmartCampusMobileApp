@@ -1,20 +1,28 @@
 package com.smartcampus.service;
 
+import com.smartcampus.dto.ChangePasswordRequest;
 import com.smartcampus.dto.LoginRequest;
 import com.smartcampus.dto.LoginResponse;
 import com.smartcampus.dto.UserRequest;
 import com.smartcampus.dto.UserResponse;
+import com.smartcampus.entity.Faculty;
+import com.smartcampus.entity.Student;
 import com.smartcampus.entity.User;
 import com.smartcampus.exception.BadRequestException;
 import com.smartcampus.exception.ResourceNotFoundException;
 import com.smartcampus.mapper.ModelMapper;
+import com.smartcampus.repository.FacultyRepository;
+import com.smartcampus.repository.StudentRepository;
 import com.smartcampus.repository.UserRepository;
+import com.smartcampus.util.Role;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +30,9 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    
+    private final StudentRepository studentRepository;
+    private final FacultyRepository facultyRepository;
 
     @Transactional
     public UserResponse createUser(UserRequest request) {
@@ -82,7 +93,6 @@ public class UserService {
     }
     
     public LoginResponse login(LoginRequest request) {
-
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() ->
                         new BadRequestException("Invalid email or password"));
@@ -95,12 +105,53 @@ public class UserService {
             throw new BadRequestException("User account is inactive");
         }
 
+        Integer studentId = null;
+        Integer facultyId = null;
+        Integer courseId = null;
+        String courseName = null; 
+        String rollNo = null;     
+
+        if (user.getRole() == Role.STUDENT) {
+            Optional<Student> studentOpt = studentRepository.findByUserUserId(user.getUserId());
+            studentId = studentOpt.map(Student::getStudentId).orElse(null);
+            courseId = studentOpt.map(s -> s.getCourse().getCourseId()).orElse(null);
+            
+            
+            if (studentOpt.isPresent()) {
+                Student student = studentOpt.get();
+                rollNo = student.getRollNo(); 
+                if (student.getCourse() != null) {
+                    courseName = student.getCourse().getCourseName(); 
+                }
+            }
+        } else if (user.getRole() == Role.FACULTY) {
+            facultyId = facultyRepository.findByUserId(user.getUserId())
+                    .map(Faculty::getFacultyId)
+                    .orElse(null);
+        }
+
         return LoginResponse.builder()
                 .userId(user.getUserId())
+                .studentId(studentId)
+                .facultyId(facultyId)
+                .courseId(courseId)
+                .courseName(courseName) 
+                .rollNo(rollNo)         
                 .fullName(user.getFullName())
                 .email(user.getEmail())
                 .phoneNo(user.getPhoneNo())
                 .role(user.getRole())
                 .build();
+    }
+    
+    public void changePassword(Integer id, ChangePasswordRequest request) {
+        User user = findUser(id); // reuses your existing helper + ResourceNotFoundException
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new BadRequestException("Current password is incorrect");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
     }
 }
