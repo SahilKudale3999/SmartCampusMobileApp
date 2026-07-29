@@ -1,5 +1,6 @@
 package com.smartcampus.service;
 
+import com.smartcampus.dto.ChangePasswordRequest;
 import com.smartcampus.dto.LoginRequest;
 import com.smartcampus.dto.LoginResponse;
 import com.smartcampus.dto.UserRequest;
@@ -141,5 +142,16 @@ public class UserService {
                 .phoneNo(user.getPhoneNo())
                 .role(user.getRole())
                 .build();
+    }
+    
+    public void changePassword(Integer id, ChangePasswordRequest request) {
+        User user = findUser(id); // reuses your existing helper + ResourceNotFoundException
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new BadRequestException("Current password is incorrect");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
     }
 }

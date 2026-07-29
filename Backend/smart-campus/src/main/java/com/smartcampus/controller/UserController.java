@@ -1,5 +1,6 @@
 package com.smartcampus.controller;
 
+import com.smartcampus.dto.ChangePasswordRequest;
 import com.smartcampus.dto.LoginRequest;
 import com.smartcampus.dto.LoginResponse;
 import com.smartcampus.dto.UserRequest;
@@ -61,5 +62,13 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(new ApiResponse<>(true,"Login successful",userService.login(request)));
+    }
+    
+    @PutMapping("/{id}/password")
+    public ResponseEntity<ApiResponse<Void>> changePassword(
+            @PathVariable Integer id,
+            @Valid @RequestBody ChangePasswordRequest request) {
+        userService.changePassword(id, request);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Password updated", null));
     }
 }
