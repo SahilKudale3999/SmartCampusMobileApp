@@ -11,3 +11,7 @@ export const getFacultyById = (id) => {
 export const getFacultyByDepartment = (department) => {
   return api.get(`/faculty/department/${department}`);
 };
+
+export const createFaculty = (facultyData) => {
+  return api.post("/faculty", facultyData);
+};
