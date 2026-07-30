@@ -1,24 +1,35 @@
 package com.smartcampus.service;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.smartcampus.dto.ActivityDTO;
+import com.smartcampus.dto.FacultyDashboardResponse;
 import com.smartcampus.dto.FacultyRequest;
 import com.smartcampus.dto.FacultyResponse;
 import com.smartcampus.dto.StudentRequest;
 import com.smartcampus.dto.StudentResponse;
+import com.smartcampus.dto.SubjectResponse;
 import com.smartcampus.entity.Course;
 import com.smartcampus.entity.Faculty;
 import com.smartcampus.entity.Student;
+import com.smartcampus.entity.Subject;
 import com.smartcampus.entity.User;
 import com.smartcampus.exception.BadRequestException;
 import com.smartcampus.exception.ResourceNotFoundException;
 import com.smartcampus.mapper.ModelMapper;
+import com.smartcampus.repository.AssignmentRepository;
+import com.smartcampus.repository.AttendanceRepository;
 import com.smartcampus.repository.CourseRepository;
 import com.smartcampus.repository.FacultyRepository;
 import com.smartcampus.repository.StudentRepository;
+import com.smartcampus.repository.SubjectRepository;
+import com.smartcampus.repository.SubmissionRepository;
 import com.smartcampus.repository.UserRepository;
 import com.smartcampus.util.Role;
 
@@ -30,6 +41,12 @@ public class FacultyService {
 	private final FacultyRepository facultyRepository;
 	
 	private final UserRepository userRepository;
+	
+	private final SubjectRepository subjectRepository;
+	private final StudentRepository studentRepository;
+	private final AssignmentRepository assignmentRepository;
+	private final SubmissionRepository submissionRepository;
+	private final AttendanceRepository attendanceRepository;
 	
 	private Faculty findFaculty(Integer id) {
         return facultyRepository.findById(id)
@@ -92,4 +109,89 @@ public class FacultyService {
 		            .department(faculty.getDepartment())
 		            .build();
 	    }
+	 
+	 public FacultyDashboardResponse getFacultyDashboard(Integer facultyId) {
+		    Faculty faculty = findFaculty(facultyId);
+
+		    List<Subject> subjectEntities = subjectRepository.findByFacultyFacultyId(facultyId);
+
+		    List<SubjectResponse> subjects = subjectEntities.stream()
+		            .map(s -> SubjectResponse.builder()
+		                    .subjectId(s.getSubjectId())
+		                    .subjectName(s.getSubjectName())
+		                    .courseId(s.getCourse().getCourseId())
+		                    .courseName(s.getCourse().getCourseName())
+		                    .facultyId(faculty.getFacultyId())
+		                    .facultyName(faculty.getUserId().getFullName())
+		                    .build())
+		            .toList();
+
+		    List<Integer> subjectIds = subjectEntities.stream()
+		            .map(Subject::getSubjectId)
+		            .toList();
+
+		    List<Integer> courseIds = subjectEntities.stream()
+		            .map(s -> s.getCourse().getCourseId())
+		            .distinct()
+		            .toList();
+
+		    long studentCount = courseIds.isEmpty() ? 0
+		            : studentRepository.countByCourseCourseIdIn(courseIds);
+
+		    int assignmentCount = subjectIds.isEmpty() ? 0
+		            : assignmentRepository.findBySubjectSubjectIdIn(subjectIds).size();
+
+		    long pendingReviews = subjectIds.isEmpty() ? 0
+		            : submissionRepository.countPendingBySubjectIds(subjectIds);
+
+		    int attendancePending = 0;
+		    if (!subjectIds.isEmpty()) {
+		        List<Integer> markedToday = attendanceRepository
+		                .findSubjectIdsMarkedOnDate(subjectIds, LocalDate.now());
+		        attendancePending = subjectIds.size() - markedToday.size();
+		    }
+
+		    List<ActivityDTO> recentActivities = buildRecentActivities(subjectIds);
+
+		    return FacultyDashboardResponse.builder()
+		            .facultyName(faculty.getUserId().getFullName())
+		            .department(faculty.getDepartment())
+		            .subjects(subjects)
+		            .subjectCount(subjects.size())
+		            .studentCount((int) studentCount)
+		            .assignmentCount(assignmentCount)
+		            .pendingReviews((int) pendingReviews)
+		            .attendancePending(attendancePending)
+		            .recentActivities(recentActivities)
+		            .build();
+		}
+
+	 private List<ActivityDTO> buildRecentActivities(List<Integer> subjectIds) {
+		    if (subjectIds.isEmpty()) {
+		        return List.of();
+		    }
+
+		    List<ActivityDTO> activities = new ArrayList<>();
+
+		    assignmentRepository.findBySubjectSubjectIdIn(subjectIds).forEach(a ->
+		            activities.add(new ActivityDTO(
+		                    "New assignment created",
+		                    a.getSubject().getSubjectName() + " - " + a.getTitle(),
+		                    a.getCreatedAt()
+		            ))
+		    );
+
+		    submissionRepository.findByAssignmentSubjectSubjectIdIn(subjectIds).forEach(s ->
+		            activities.add(new ActivityDTO(
+		                    "Submission received",
+		                    s.getStudent().getUser().getFullName() + " submitted " + s.getAssignment().getTitle(),
+		                    s.getSubmittedAt()
+		            ))
+		    );
+
+		    return activities.stream()
+		            .sorted(Comparator.comparing(ActivityDTO::getTimestamp).reversed())
+		            .limit(5)
+		            .toList();
+		}
 }
