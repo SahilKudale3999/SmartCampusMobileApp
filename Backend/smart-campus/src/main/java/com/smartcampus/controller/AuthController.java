@@ -78,6 +78,7 @@ public class AuthController {
                 facultyRepository.findByUserUserId(user.getUserId())
                         .ifPresent(faculty -> {
                             finalUserResponse.setFacultyId(faculty.getFacultyId());
+                            finalUserResponse.setDepartment(faculty.getDepartment());   // ADD THIS LINE
                         });
             }
         }
