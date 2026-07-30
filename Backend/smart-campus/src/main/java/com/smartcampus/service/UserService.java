@@ -108,20 +108,19 @@ public class UserService {
         Integer studentId = null;
         Integer facultyId = null;
         Integer courseId = null;
-        String courseName = null; 
-        String rollNo = null;     
+        String courseName = null;
+        String rollNo = null;
 
         if (user.getRole() == Role.STUDENT) {
             Optional<Student> studentOpt = studentRepository.findByUserUserId(user.getUserId());
             studentId = studentOpt.map(Student::getStudentId).orElse(null);
             courseId = studentOpt.map(s -> s.getCourse().getCourseId()).orElse(null);
-            
-            
+
             if (studentOpt.isPresent()) {
                 Student student = studentOpt.get();
-                rollNo = student.getRollNo(); 
+                rollNo = student.getRollNo();
                 if (student.getCourse() != null) {
-                    courseName = student.getCourse().getCourseName(); 
+                    courseName = student.getCourse().getCourseName();
                 }
             }
         } else if (user.getRole() == Role.FACULTY) {
@@ -135,8 +134,8 @@ public class UserService {
                 .studentId(studentId)
                 .facultyId(facultyId)
                 .courseId(courseId)
-                .courseName(courseName) 
-                .rollNo(rollNo)         
+                .courseName(courseName)
+                .rollNo(rollNo)
                 .fullName(user.getFullName())
                 .email(user.getEmail())
                 .phoneNo(user.getPhoneNo())
