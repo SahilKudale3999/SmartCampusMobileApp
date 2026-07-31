@@ -12,6 +12,7 @@ import {
 import { useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import Colors from "../../constants/Colors";
 import api from "../../api/axios";
 
@@ -23,57 +24,45 @@ const getGreeting = () => {
 };
 
 export default function FacultyHomeScreen({ navigation }) {
-  const [facultyName, setFacultyName] = useState("Faculty");
-  const [department, setDepartment] = useState("");
-  const [facultyId, setFacultyId] = useState(null);
-
-  const [subjects, setSubjects] = useState([]);
-  const [loadingSubjects, setLoadingSubjects] = useState(true);
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
-      loadUserAndSubjects();
+      fetchDashboard();
     }, [])
   );
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadUserAndSubjects();
+    await fetchDashboard();
     setRefreshing(false);
   };
 
-  const loadUserAndSubjects = async () => {
+  const fetchDashboard = async () => {
     try {
       const userData = await AsyncStorage.getItem("user");
-      if (!userData) return;
+      if (!userData) {
+        setLoading(false);
+        return;
+      }
 
       const parsedUser = JSON.parse(userData);
-      setFacultyName(parsedUser.fullName || "Faculty");
-      setDepartment(parsedUser.department || "");
-      setFacultyId(parsedUser.facultyId || null);
+      const facultyId = parsedUser.facultyId;
 
-      if (parsedUser?.facultyId) {
-        await loadSubjects(parsedUser.facultyId);
-      } else {
-        setLoadingSubjects(false);
+      if (!facultyId) {
+        setLoading(false);
+        return;
       }
-    } catch (error) {
-      console.log("Error loading faculty user data:", error.response?.data || error.message);
-      setLoadingSubjects(false);
-    }
-  };
 
-  const loadSubjects = async (id) => {
-    setLoadingSubjects(true);
-    try {
-      const response = await api.get(`/subject/faculty/${id}`);
-      const subjectList = response.data?.data || response.data || [];
-      setSubjects(subjectList);
+      const response = await api.get(`/faculty/dashboard/${facultyId}`);
+      const data = response.data?.data || response.data;
+      setDashboardData(data);
     } catch (error) {
-      console.log("Error loading faculty subjects:", error.response?.data || error.message);
+      console.log("Error fetching faculty dashboard:", error.response?.data || error.message);
     } finally {
-      setLoadingSubjects(false);
+      setLoading(false);
     }
   };
 
@@ -89,12 +78,11 @@ export default function FacultyHomeScreen({ navigation }) {
           onPress: async () => {
             try {
               await AsyncStorage.removeItem("user");
-              // Clear token if stored separately, e.g., await AsyncStorage.removeItem("token");
-              
-              // Reset navigation stack to Login screen
+              await AsyncStorage.removeItem("token");
+
               navigation.reset({
                 index: 0,
-                routes: [{ name: "Login" }], // Make sure "Login" matches your route name
+                routes: [{ name: "Login" }],
               });
             } catch (error) {
               console.log("Error during logout:", error);
@@ -105,6 +93,20 @@ export default function FacultyHomeScreen({ navigation }) {
       { cancelable: true }
     );
   };
+
+  if (loading && !dashboardData) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color={Colors.primary || "#2563EB"} />
+        <Text style={styles.loaderText}>Loading dashboard...</Text>
+      </View>
+    );
+  }
+
+  const facultyName = dashboardData?.facultyName || "Faculty";
+  const department = dashboardData?.department || "";
+  const subjects = dashboardData?.subjects || [];
+  const recentActivities = dashboardData?.recentActivities || [];
 
   return (
     <ScrollView
@@ -141,8 +143,13 @@ export default function FacultyHomeScreen({ navigation }) {
         </TouchableOpacity>
       </View>
 
-      {/* My Subjects Hero Card */}
-      <View style={styles.subjectsCard}>
+      {/* My Subjects Hero Card with Gradient */}
+      <LinearGradient
+        colors={[Colors.primary || "#2563EB", "#1D4ED8"]}
+        style={styles.subjectsCard}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      >
         <View style={styles.subjectsHeader}>
           <View style={styles.subjectsTitleRow}>
             <Ionicons name="library" size={18} color="#93C5FD" style={{ marginRight: 8 }} />
@@ -151,15 +158,13 @@ export default function FacultyHomeScreen({ navigation }) {
           <Ionicons name="chevron-forward-circle" size={22} color="#FFF" />
         </View>
 
-        {loadingSubjects ? (
-          <ActivityIndicator color="#FFF" style={{ marginVertical: 20 }} />
-        ) : subjects.length === 0 ? (
+        {subjects.length === 0 ? (
           <Text style={styles.noSubjectsText}>No subjects assigned yet</Text>
         ) : (
           <>
-            <Text style={styles.subjectCount}>{subjects.length}</Text>
+            <Text style={styles.subjectCount}>{dashboardData?.subjectCount || subjects.length}</Text>
             <Text style={styles.subjectCountLabel}>
-              {subjects.length === 1 ? "Subject Assigned" : "Subjects Assigned"}
+              {(dashboardData?.subjectCount || subjects.length) === 1 ? "Subject Assigned" : "Subjects Assigned"}
             </Text>
 
             <View style={styles.subjectChipsRow}>
@@ -178,11 +183,49 @@ export default function FacultyHomeScreen({ navigation }) {
             </View>
           </>
         )}
+      </LinearGradient>
+
+      {/* Summary Cards Grid */}
+      <View style={styles.sectionHeaderRow}>
+        <Text style={styles.sectionTitle}>Overview</Text>
+      </View>
+      <View style={styles.summaryGrid}>
+        <View style={styles.summaryCard}>
+          <View style={[styles.summaryIconBg, { backgroundColor: "#EFF6FF" }]}>
+            <Ionicons name="people" size={20} color="#2563EB" />
+          </View>
+          <Text style={styles.summaryValue}>{dashboardData?.studentCount || 0}</Text>
+          <Text style={styles.summaryLabel}>Students</Text>
+        </View>
+
+        <View style={styles.summaryCard}>
+          <View style={[styles.summaryIconBg, { backgroundColor: "#FEF3C7" }]}>
+            <Ionicons name="document-text" size={20} color="#D97706" />
+          </View>
+          <Text style={styles.summaryValue}>{dashboardData?.assignmentCount || 0}</Text>
+          <Text style={styles.summaryLabel}>Assignments</Text>
+        </View>
+
+        <View style={styles.summaryCard}>
+          <View style={[styles.summaryIconBg, { backgroundColor: "#F3E8FF" }]}>
+            <Ionicons name="time" size={20} color="#9333EA" />
+          </View>
+          <Text style={styles.summaryValue}>{dashboardData?.pendingReviews || 0}</Text>
+          <Text style={styles.summaryLabel}>Pending Reviews</Text>
+        </View>
+
+        <View style={styles.summaryCard}>
+          <View style={[styles.summaryIconBg, { backgroundColor: "#FEF2F2" }]}>
+            <Ionicons name="calendar" size={20} color="#EF4444" />
+          </View>
+          <Text style={styles.summaryValue}>{dashboardData?.attendancePending || 0}</Text>
+          <Text style={styles.summaryLabel}>Attendance Pending</Text>
+        </View>
       </View>
 
       {/* Quick Access Grid */}
       <View style={styles.sectionHeaderRow}>
-        <Text style={styles.sectionTitle}>Quick Access</Text>
+        <Text style={styles.sectionTitle}>Quick Actions</Text>
       </View>
       <View style={styles.grid}>
         <TouchableOpacity
@@ -191,7 +234,7 @@ export default function FacultyHomeScreen({ navigation }) {
           onPress={() => navigation.navigate("Attendance")}
         >
           <View style={[styles.actionIconBg, { backgroundColor: "#EFF6FF" }]}>
-            <Ionicons name="checkmark-done" size={26} color="#2563EB" />
+            <Ionicons name="checkmark-done" size={24} color="#2563EB" />
           </View>
           <View style={styles.actionTextContainer}>
             <Text style={styles.actionText}>Take Attendance</Text>
@@ -206,7 +249,7 @@ export default function FacultyHomeScreen({ navigation }) {
           onPress={() => navigation.navigate("Students")}
         >
           <View style={[styles.actionIconBg, { backgroundColor: "#F0FDF4" }]}>
-            <Ionicons name="people" size={26} color="#16A34A" />
+            <Ionicons name="people" size={24} color="#16A34A" />
           </View>
           <View style={styles.actionTextContainer}>
             <Text style={styles.actionText}>Students</Text>
@@ -221,7 +264,7 @@ export default function FacultyHomeScreen({ navigation }) {
           onPress={() => navigation.navigate("Assignments")}
         >
           <View style={[styles.actionIconBg, { backgroundColor: "#FEF3C7" }]}>
-            <Ionicons name="document-text" size={26} color="#D97706" />
+            <Ionicons name="document-text" size={24} color="#D97706" />
           </View>
           <View style={styles.actionTextContainer}>
             <Text style={styles.actionText}>Assignments</Text>
@@ -236,14 +279,41 @@ export default function FacultyHomeScreen({ navigation }) {
           onPress={() => navigation.navigate("Grades")}
         >
           <View style={[styles.actionIconBg, { backgroundColor: "#F3E8FF" }]}>
-            <Ionicons name="ribbon" size={26} color="#9333EA" />
+            <Ionicons name="ribbon" size={24} color="#9333EA" />
           </View>
           <View style={styles.actionTextContainer}>
-            <Text style={styles.actionText}>Grades</Text>
-            <Text style={styles.actionSubText}>Review submissions</Text>
+            <Text style={styles.actionText}>Grade Submissions</Text>
+            <Text style={styles.actionSubText}>Review student work</Text>
           </View>
           <Ionicons name="chevron-forward" size={16} color="#CBD5E1" />
         </TouchableOpacity>
+      </View>
+
+      {/* Recent Activities Section */}
+      <View style={styles.sectionHeaderRow}>
+        <Text style={styles.sectionTitle}>Recent Activities</Text>
+      </View>
+      <View style={styles.activitiesContainer}>
+        {recentActivities.length === 0 ? (
+          <View style={styles.emptyActivityCard}>
+            <Ionicons name="pulse-outline" size={24} color="#94A3B8" />
+            <Text style={styles.emptyActivityText}>No recent activities found</Text>
+          </View>
+        ) : (
+          recentActivities.map((activity, index) => (
+            <View key={index} style={styles.activityItem}>
+              <View style={styles.activityIconCircle}>
+                <Ionicons name="flash-outline" size={16} color="#2563EB" />
+              </View>
+              <View style={styles.activityContentWrapper}>
+                <Text style={styles.activityTitle}>{activity.title || activity.type || "Activity"}</Text>
+                <Text style={styles.activityDescription} numberOfLines={1}>
+                  {activity.description || activity.message || "New update recorded"}
+                </Text>
+              </View>
+            </View>
+          ))
+        )}
       </View>
 
       <View style={{ height: 35 }} />
@@ -256,6 +326,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F8FAFC",
     paddingHorizontal: 20,
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F8FAFC",
+  },
+  loaderText: {
+    marginTop: 10,
+    color: "#64748B",
+    fontWeight: "600",
   },
   header: {
     flexDirection: "row",
@@ -303,7 +384,6 @@ const styles = StyleSheet.create({
     borderColor: "#FEE2E2",
   },
   subjectsCard: {
-    backgroundColor: Colors.primary || "#2563EB",
     borderRadius: 22,
     padding: 20,
     marginBottom: 20,
@@ -374,11 +454,50 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: "#0F172A",
   },
+  summaryGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
+  summaryCard: {
+    width: "48%",
+    backgroundColor: "#FFFFFF",
+    padding: 16,
+    borderRadius: 20,
+    marginBottom: 14,
+    elevation: 2,
+    shadowColor: "#0F172A",
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    borderWidth: 1,
+    borderColor: "#F1F5F9",
+  },
+  summaryIconBg: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  summaryValue: {
+    fontSize: 22,
+    fontWeight: "800",
+    color: "#0F172A",
+  },
+  summaryLabel: {
+    fontSize: 11,
+    color: "#64748B",
+    fontWeight: "600",
+    marginTop: 2,
+  },
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    marginBottom: 15,
+    marginBottom: 10,
   },
   actionCard: {
     width: "48%",
@@ -399,9 +518,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   actionIconBg: {
-    width: 46,
-    height: 46,
-    borderRadius: 14,
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
     marginRight: 10,
@@ -411,7 +530,7 @@ const styles = StyleSheet.create({
   },
   actionText: {
     fontWeight: "800",
-    fontSize: 14,
+    fontSize: 13,
     color: "#0F172A",
   },
   actionSubText: {
@@ -419,5 +538,52 @@ const styles = StyleSheet.create({
     color: "#64748B",
     fontWeight: "600",
     marginTop: 1,
+  },
+  activitiesContainer: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#F1F5F9",
+    marginBottom: 20,
+  },
+  activityItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F8FAFC",
+  },
+  activityIconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: "#EFF6FF",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  activityContentWrapper: {
+    flex: 1,
+  },
+  activityTitle: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#1E293B",
+  },
+  activityDescription: {
+    fontSize: 11,
+    color: "#64748B",
+    marginTop: 1,
+  },
+  emptyActivityCard: {
+    alignItems: "center",
+    paddingVertical: 20,
+  },
+  emptyActivityText: {
+    color: "#94A3B8",
+    fontSize: 12,
+    fontWeight: "600",
+    marginTop: 6,
   },
 });
