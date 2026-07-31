@@ -12,12 +12,30 @@ import {
   TextInput,
   RefreshControl,
   Animated,
+  Image,
+  FlatList,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 import Colors from "../../constants/Colors";
 import api from "../../api/axios";
+
+const AVATAR_OPTIONS = [
+  { id: "1", style: "notionists", seed: "Aiden" },
+  { id: "2", style: "notionists", seed: "Priya" },
+  { id: "3", style: "notionists", seed: "Rohan" },
+  { id: "4", style: "notionists", seed: "Isha" },
+  { id: "5", style: "personas", seed: "Kabir" },
+  { id: "6", style: "personas", seed: "Sneha" },
+  { id: "7", style: "personas", seed: "Nisha" },
+  { id: "8", style: "micah", seed: "Arjun" },
+  { id: "9", style: "micah", seed: "Vikas" },
+  { id: "10", style: "micah", seed: "Meera" },
+];
+
+const getAvatarUrl = (style, seed) =>
+  `https://api.dicebear.com/9.x/${style}/png?seed=${encodeURIComponent(seed)}`;
 
 export default function ProfileScreen({ navigation }) {
   const [profileData, setProfileData] = useState({
@@ -33,6 +51,10 @@ export default function ProfileScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+
+  // Avatar Picker State
+  const [avatarPickerVisible, setAvatarPickerVisible] = useState(false);
+  const [selectedAvatar, setSelectedAvatar] = useState(null);
 
   // Edit Profile Modal States
   const [editModalVisible, setEditModalVisible] = useState(false);
@@ -105,8 +127,30 @@ export default function ProfileScreen({ navigation }) {
   useFocusEffect(
     useCallback(() => {
       loadUserData();
+      loadSavedAvatar();
     }, [])
   );
+
+  const loadSavedAvatar = async () => {
+    try {
+      const saved = await AsyncStorage.getItem("studentAvatar");
+      if (saved) {
+        setSelectedAvatar(JSON.parse(saved));
+      }
+    } catch (error) {
+      console.log("Error loading saved avatar:", error);
+    }
+  };
+
+  const handleSelectAvatar = async (option) => {
+    try {
+      setSelectedAvatar(option);
+      await AsyncStorage.setItem("studentAvatar", JSON.stringify(option));
+      setAvatarPickerVisible(false);
+    } catch (error) {
+      console.log("Error saving avatar:", error);
+    }
+  };
 
   const loadUserData = async (isRefreshing = false) => {
     if (!isRefreshing) setLoading(true);
@@ -156,7 +200,7 @@ export default function ProfileScreen({ navigation }) {
     loadUserData(true);
   };
 
-  // Helper to grab initials for a custom avatar badge
+  // Helper to grab initials for a fallback badge when no avatar is chosen
   const getInitials = (name) => {
     if (!name) return "ST";
     const parts = name.trim().split(" ");
@@ -299,21 +343,43 @@ export default function ProfileScreen({ navigation }) {
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary || "#2563EB"} />
       }
     >
-      {/* Interactive Header Card with Dynamic Initials Badge */}
+      {/* Interactive Header Card - Avatar Left, Details Right */}
       <Animated.View style={[styles.profileHeaderCard, { transform: [{ scale: scaleAnim }] }]}>
-        <View style={styles.avatarContainer}>
-          <Text style={styles.avatarText}>{getInitials(profileData.fullName)}</Text>
-          <View style={styles.onlineBadge} />
-        </View>
+        <View style={styles.headerTopRow}>
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() => {
+              animatePress();
+              setAvatarPickerVisible(true);
+            }}
+          >
+            <View style={styles.avatarContainer}>
+              {selectedAvatar ? (
+                <Image
+                  source={{ uri: getAvatarUrl(selectedAvatar.style, selectedAvatar.seed) }}
+                  style={styles.avatarImage}
+                />
+              ) : (
+                <Text style={styles.avatarText}>{getInitials(profileData.fullName)}</Text>
+              )}
+              <View style={styles.onlineBadge} />
+              <View style={styles.editAvatarBadge}>
+                <Ionicons name="camera" size={12} color="#FFFFFF" />
+              </View>
+            </View>
+          </TouchableOpacity>
 
-        <Text style={styles.profileName} numberOfLines={1} adjustsFontSizeToFit>
-          {profileData.fullName}
-        </Text>
-        <Text style={styles.profileId}>Roll No: {profileData.rollNo}</Text>
-        
-        <View style={styles.deptBadge}>
-          <Ionicons name="school" size={13} color="#2563EB" style={{ marginRight: 4 }} />
-          <Text style={styles.deptBadgeText}>{profileData.courseName}</Text>
+          <View style={styles.headerDetailsColumn}>
+            <Text style={styles.profileName} numberOfLines={1} adjustsFontSizeToFit>
+              {profileData.fullName}
+            </Text>
+            <Text style={styles.profileId}>Roll No: {profileData.rollNo}</Text>
+
+            <View style={styles.deptBadge}>
+              <Ionicons name="school" size={13} color="#2563EB" style={{ marginRight: 4 }} />
+              <Text style={styles.deptBadgeText} numberOfLines={1}>{profileData.courseName}</Text>
+            </View>
+          </View>
         </View>
 
         <View style={styles.heroStatsRow}>
@@ -372,18 +438,6 @@ export default function ProfileScreen({ navigation }) {
             <View style={styles.infoTextContainer}>
               <Text style={styles.infoLabel}>Phone Number</Text>
               <Text style={styles.infoValue} numberOfLines={1}>{profileData.phone}</Text>
-            </View>
-          </View>
-
-          <View style={styles.divider} />
-
-          <View style={styles.infoRow}>
-            <View style={[styles.iconBox, { backgroundColor: "#FDF4FF" }]}>
-              <Ionicons name="id-card" size={18} color="#C026D3" />
-            </View>
-            <View style={styles.infoTextContainer}>
-              <Text style={styles.infoLabel}>Student Unique ID</Text>
-              <Text style={styles.infoValue} numberOfLines={1}>{profileData.studentId}</Text>
             </View>
           </View>
         </View>
@@ -476,6 +530,56 @@ export default function ProfileScreen({ navigation }) {
       </TouchableOpacity>
 
       <View style={{ height: 40 }} />
+
+      {/* Avatar Picker Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={avatarPickerVisible}
+        onRequestClose={() => setAvatarPickerVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeaderRow}>
+              <Text style={styles.modalTitle}>Choose Your Avatar</Text>
+              <TouchableOpacity onPress={() => setAvatarPickerVisible(false)}>
+                <Ionicons name="close" size={22} color="#64748B" />
+              </TouchableOpacity>
+            </View>
+
+            <FlatList
+              data={AVATAR_OPTIONS}
+              keyExtractor={(item) => item.id}
+              numColumns={3}
+              columnWrapperStyle={{ justifyContent: "space-between", marginBottom: 14 }}
+              renderItem={({ item }) => {
+                const isSelected =
+                  selectedAvatar?.style === item.style && selectedAvatar?.seed === item.seed;
+                return (
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() => handleSelectAvatar(item)}
+                    style={[
+                      styles.avatarOptionWrap,
+                      isSelected && styles.avatarOptionWrapSelected,
+                    ]}
+                  >
+                    <Image
+                      source={{ uri: getAvatarUrl(item.style, item.seed) }}
+                      style={styles.avatarOptionImage}
+                    />
+                    {isSelected && (
+                      <View style={styles.avatarOptionCheck}>
+                        <Ionicons name="checkmark-circle" size={18} color="#2563EB" />
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                );
+              }}
+            />
+          </View>
+        </View>
+      </Modal>
 
       {/* Edit Profile Modal */}
       <Modal
@@ -660,11 +764,10 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   profileHeaderCard: {
-    alignItems: "center",
     backgroundColor: "#FFFFFF",
     marginTop: 10,
     marginBottom: 20,
-    padding: 22,
+    padding: 20,
     borderRadius: 24,
     borderWidth: 1,
     borderColor: "#F1F5F9",
@@ -675,40 +778,90 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     width: "100%",
   },
+  headerTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  headerDetailsColumn: {
+    flex: 1,
+    marginLeft: 16,
+    alignItems: "flex-start",
+  },
   avatarContainer: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: 92,
+    height: 92,
+    borderRadius: 46,
     backgroundColor: Colors.primary || "#2563EB",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 12,
     elevation: 3,
     borderWidth: 2,
     borderColor: "#DBEAFE",
     position: "relative",
+    overflow: "hidden",
+  },
+  avatarImage: {
+    width: "100%",
+    height: "100%",
   },
   avatarText: {
     color: "#FFFFFF",
-    fontSize: 22,
+    fontSize: 26,
     fontWeight: "800",
   },
   onlineBadge: {
     position: "absolute",
-    bottom: 2,
-    right: 2,
-    width: 14,
-    height: 14,
-    borderRadius: 7,
+    bottom: 4,
+    right: 4,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
     backgroundColor: "#10B981",
     borderWidth: 2,
     borderColor: "#FFFFFF",
+  },
+  editAvatarBadge: {
+    position: "absolute",
+    bottom: 4,
+    left: 4,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "#0F172A",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#FFFFFF",
+  },
+  avatarOptionWrap: {
+    width: 88,
+    height: 88,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: "#F1F5F9",
+    overflow: "hidden",
+    backgroundColor: "#F8FAFC",
+    position: "relative",
+  },
+  avatarOptionWrapSelected: {
+    borderColor: "#2563EB",
+  },
+  avatarOptionImage: {
+    width: "100%",
+    height: "100%",
+  },
+  avatarOptionCheck: {
+    position: "absolute",
+    top: 4,
+    right: 4,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 10,
   },
   profileName: {
     fontSize: 20,
     fontWeight: "800",
     color: "#0F172A",
-    textAlign: "center",
+    textAlign: "left",
     width: "100%",
   },
   profileId: {
@@ -727,11 +880,14 @@ const styles = StyleSheet.create({
     marginTop: 10,
     borderWidth: 1,
     borderColor: "#DBEAFE",
+    alignSelf: "flex-start",
+    maxWidth: "100%",
   },
   deptBadgeText: {
     fontSize: 12,
     fontWeight: "700",
     color: "#2563EB",
+    flexShrink: 1,
   },
   heroStatsRow: {
     flexDirection: "row",
