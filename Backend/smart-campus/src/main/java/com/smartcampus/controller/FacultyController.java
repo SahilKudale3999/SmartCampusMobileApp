@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.smartcampus.dto.FacultyDashboardResponse;
 import com.smartcampus.dto.FacultyRequest;
 import com.smartcampus.dto.FacultyResponse;
 import com.smartcampus.dto.StudentRequest;
@@ -63,4 +64,9 @@ public class FacultyController {
     public ResponseEntity<ApiResponse<FacultyResponse>> getFacultyByDepartment(@PathVariable String department) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Faculty fetched", facultyService.getFacultyByDepartment(department)));
     }
+	
+	@GetMapping("/dashboard/{facultyId}")
+	public ResponseEntity<ApiResponse<FacultyDashboardResponse>> getFacultyDashboard(@PathVariable Integer facultyId) {
+	    return ResponseEntity.ok(new ApiResponse<>(true, "Dashboard fetched", facultyService.getFacultyDashboard(facultyId)));
+	}
 }

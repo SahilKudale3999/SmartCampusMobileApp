@@ -21,6 +21,7 @@ import { registerUser } from "../../api/authApi";
 import { getAllCourses } from "../../api/courseApi";
 import { createStudent } from "../../api/studentApi";
 import { createFaculty } from "../../api/facultyApi";
+import api from "../../api/axios"; // Added to handle subject creation
 import CustomInput from "../../components/CustomInput";
 import CustomButton from "../../components/CustomButton";
 import Colors from "../../constants/Colors";
@@ -64,8 +65,9 @@ export default function RegisterScreen({ navigation }) {
   const [loadingCourses, setLoadingCourses] = useState(true);
   const [pickerVisible, setPickerVisible] = useState(false);
 
-  // Faculty-only field
+  // Faculty-only fields (Department + Subject mapping to Course)
   const [department, setDepartment] = useState("");
+  const [subjectName, setSubjectName] = useState(""); // New subject text input
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -109,9 +111,19 @@ export default function RegisterScreen({ navigation }) {
       }
     }
 
-    if (role === "FACULTY" && !department.trim()) {
-      Alert.alert("Validation Error", "Please enter your department.");
-      return false;
+    if (role === "FACULTY") {
+      if (!department.trim()) {
+        Alert.alert("Validation Error", "Please enter your department.");
+        return false;
+      }
+      if (!subjectName.trim()) {
+        Alert.alert("Validation Error", "Please enter the subject name you teach.");
+        return false;
+      }
+      if (!selectedCourse) {
+        Alert.alert("Validation Error", "Please select the course this subject belongs to.");
+        return false;
+      }
     }
 
     return true;
@@ -125,6 +137,7 @@ export default function RegisterScreen({ navigation }) {
     setRollNo("");
     setSelectedCourse(null);
     setDepartment("");
+    setSubjectName("");
   };
 
   const handleRegister = async () => {
@@ -144,20 +157,15 @@ export default function RegisterScreen({ navigation }) {
       const userResponse = await registerUser(userRequest);
       console.log("Full Registration Server Response:", userResponse);
 
-      // registerUser() already returns the parsed body, i.e.
-      // { data: { token, user }, message, success }.
-      // Some HTTP clients (axios etc.) wrap that again in a `.data` envelope,
-      // so we normalize for both cases WITHOUT double-unwrapping.
       const responseData =
         userResponse && userResponse.success !== undefined
-          ? userResponse // already the body: { data, message, success }
-          : userResponse.data; // axios-style wrapper: unwrap once
+          ? userResponse 
+          : userResponse.data; 
 
       if (!responseData || responseData.success === false) {
         throw new Error(responseData?.message || "Registration failed");
       }
 
-      // responseData is now { data: { token, user }, message, success }
       const newUserId = responseData.data?.user?.userId;
       console.log("FINAL resolved newUserId:", newUserId);
 
@@ -186,7 +194,33 @@ export default function RegisterScreen({ navigation }) {
           userId: newUserId,
           department: department.trim(),
         };
-        await createFaculty(facultyRequest);
+        const facultyResponse = await createFaculty(facultyRequest);
+        
+        const facultyData = facultyResponse.data?.data || facultyResponse.data;
+        const generatedFacultyId = facultyData?.facultyId;
+
+        if (!generatedFacultyId) {
+          throw new Error("Faculty ID was not returned by the server.");
+        }
+
+        // Save subject linked to course and newly created faculty
+        const subjectRequest = {
+          subjectName: subjectName.trim(),
+          courseId: selectedCourse.courseId,
+          facultyId: generatedFacultyId,
+        };
+
+        await api.post("/subject", subjectRequest);
+
+        const storedUser = {
+          userId: newUserId,
+          email: email.trim(),
+          fullName: name.trim(),
+          role: "FACULTY",
+          facultyId: generatedFacultyId,
+          department: department.trim(),
+        };
+        await AsyncStorage.setItem("user", JSON.stringify(storedUser));
       }
 
       Alert.alert("Success", "Account created successfully!");
@@ -299,7 +333,7 @@ export default function RegisterScreen({ navigation }) {
                   autoCapitalize="characters"
                 />
 
-                {/* Enhanced Course Selector Box featuring custom dynamic icon */}
+                {/* Course Selector Box for Student */}
                 <TouchableOpacity
                   style={styles.uniqueCourseBox}
                   onPress={() => setPickerVisible(true)}
@@ -340,11 +374,59 @@ export default function RegisterScreen({ navigation }) {
                 </TouchableOpacity>
               </>
             ) : (
-              <CustomInput
-                placeholder="Department Name (e.g. Computer Science)"
-                value={department}
-                onChangeText={setDepartment}
-              />
+              <>
+                <CustomInput
+                  placeholder="Department Name (e.g. Computer Science)"
+                  value={department}
+                  onChangeText={setDepartment}
+                />
+                
+                <CustomInput
+                  placeholder="Subject Name to Teach (e.g. Data Structures)"
+                  value={subjectName}
+                  onChangeText={setSubjectName}
+                />
+
+                {/* Course Selector Box for Faculty to map subject */}
+                <TouchableOpacity
+                  style={styles.uniqueCourseBox}
+                  onPress={() => setPickerVisible(true)}
+                  disabled={loadingCourses}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.courseBoxLeft}>
+                    <View 
+                      style={[
+                        styles.iconCircle, 
+                        { backgroundColor: selectedCourse ? getCourseTheme(selectedCourse.courseName).bg : "#EFF6FF" }
+                      ]}
+                    >
+                      <Ionicons 
+                        name={selectedCourse ? getCourseTheme(selectedCourse.courseName).icon : "code-working-outline"} 
+                        size={18} 
+                        color={selectedCourse ? getCourseTheme(selectedCourse.courseName).color : (Colors.primary || "#2563EB")} 
+                      />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.courseBoxLabel}>Course for Subject</Text>
+                      <Text
+                        style={[
+                          styles.courseBoxValue,
+                          !selectedCourse && styles.pickerPlaceholder,
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {selectedCourse ? selectedCourse.courseName : "Tap to select course"}
+                      </Text>
+                    </View>
+                  </View>
+                  {loadingCourses ? (
+                    <ActivityIndicator size="small" color={Colors.primary} />
+                  ) : (
+                    <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
+                  )}
+                </TouchableOpacity>
+              </>
             )}
 
             <View style={styles.buttonWrapper}>
@@ -366,7 +448,7 @@ export default function RegisterScreen({ navigation }) {
         </View>
       </ScrollView>
 
-      {/* Modern Impressive Coding Tech Stack Grid Selector Modal */}
+      {/* Course Grid Selector Modal */}
       <Modal
         visible={pickerVisible}
         transparent

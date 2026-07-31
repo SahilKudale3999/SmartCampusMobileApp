@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
+  Alert,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -76,6 +77,35 @@ export default function FacultyHomeScreen({ navigation }) {
     }
   };
 
+  const handleLogout = () => {
+    Alert.alert(
+      "Logout",
+      "Are you sure you want to log out?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Logout",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await AsyncStorage.removeItem("user");
+              // Clear token if stored separately, e.g., await AsyncStorage.removeItem("token");
+              
+              // Reset navigation stack to Login screen
+              navigation.reset({
+                index: 0,
+                routes: [{ name: "Login" }], // Make sure "Login" matches your route name
+              });
+            } catch (error) {
+              console.log("Error during logout:", error);
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
   return (
     <ScrollView
       style={styles.container}
@@ -100,6 +130,15 @@ export default function FacultyHomeScreen({ navigation }) {
             </View>
           ) : null}
         </View>
+
+        {/* Logout Button */}
+        <TouchableOpacity
+          style={styles.logoutButton}
+          activeOpacity={0.8}
+          onPress={handleLogout}
+        >
+          <Ionicons name="log-out-outline" size={20} color="#EF4444" />
+        </TouchableOpacity>
       </View>
 
       {/* My Subjects Hero Card */}
@@ -252,6 +291,16 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "700",
     color: "#2563EB",
+  },
+  logoutButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: "#FEF2F2",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#FEE2E2",
   },
   subjectsCard: {
     backgroundColor: Colors.primary || "#2563EB",
