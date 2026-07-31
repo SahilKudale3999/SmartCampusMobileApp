@@ -32,4 +32,5 @@ build/
 !**/src/test/**/build/
 
 ### VS Code ###
+Backend/smart-campus/src/main/resources/application.properties
 .vscode/
