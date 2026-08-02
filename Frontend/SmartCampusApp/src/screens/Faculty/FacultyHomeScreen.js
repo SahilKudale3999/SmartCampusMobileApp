@@ -144,83 +144,101 @@ export default function FacultyHomeScreen({ navigation }) {
       </View>
 
       {/* My Subjects Hero Card with Gradient */}
-      <LinearGradient
-        colors={[Colors.primary || "#2563EB", "#1D4ED8"]}
-        style={styles.subjectsCard}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      >
-        <View style={styles.subjectsHeader}>
-          <View style={styles.subjectsTitleRow}>
-            <Ionicons name="library" size={18} color="#93C5FD" style={{ marginRight: 8 }} />
-            <Text style={styles.subjectsTitle}>My Subjects</Text>
-          </View>
-          <Ionicons name="chevron-forward-circle" size={22} color="#FFF" />
-        </View>
-
-        {subjects.length === 0 ? (
-          <Text style={styles.noSubjectsText}>No subjects assigned yet</Text>
-        ) : (
-          <>
-            <Text style={styles.subjectCount}>{dashboardData?.subjectCount || subjects.length}</Text>
-            <Text style={styles.subjectCountLabel}>
-              {(dashboardData?.subjectCount || subjects.length) === 1 ? "Subject Assigned" : "Subjects Assigned"}
-            </Text>
-
-            <View style={styles.subjectChipsRow}>
-              {subjects.slice(0, 4).map((subject, index) => (
-                <View key={subject.subjectId || index} style={styles.subjectChip}>
-                  <Text style={styles.subjectChipText} numberOfLines={1}>
-                    {subject.subjectName}
-                  </Text>
-                </View>
-              ))}
-              {subjects.length > 4 && (
-                <View style={styles.subjectChip}>
-                  <Text style={styles.subjectChipText}>+{subjects.length - 4} more</Text>
-                </View>
-              )}
+      <TouchableOpacity activeOpacity={0.9} onPress={() => navigation.navigate("Subjects")}>
+        <LinearGradient
+          colors={[Colors.primary || "#2563EB", "#1D4ED8"]}
+          style={styles.subjectsCard}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <View style={styles.subjectsHeader}>
+            <View style={styles.subjectsTitleRow}>
+              <Ionicons name="library" size={18} color="#93C5FD" style={{ marginRight: 8 }} />
+              <Text style={styles.subjectsTitle}>My Subjects</Text>
             </View>
-          </>
-        )}
-      </LinearGradient>
+            <Ionicons name="chevron-forward-circle" size={22} color="#FFF" />
+          </View>
+
+          {subjects.length === 0 ? (
+            <Text style={styles.noSubjectsText}>No subjects assigned yet</Text>
+          ) : (
+            <>
+              <Text style={styles.subjectCount}>{dashboardData?.subjectCount || subjects.length}</Text>
+              <Text style={styles.subjectCountLabel}>
+                {(dashboardData?.subjectCount || subjects.length) === 1 ? "Subject Assigned" : "Subjects Assigned"}
+              </Text>
+
+              <View style={styles.subjectChipsRow}>
+                {subjects.slice(0, 4).map((subject, index) => (
+                  <View key={subject.subjectId || index} style={styles.subjectChip}>
+                    <Text style={styles.subjectChipText} numberOfLines={1}>
+                      {subject.subjectName}
+                    </Text>
+                  </View>
+                ))}
+                {subjects.length > 4 && (
+                  <View style={styles.subjectChip}>
+                    <Text style={styles.subjectChipText}>+{subjects.length - 4} more</Text>
+                  </View>
+                )}
+              </View>
+            </>
+          )}
+        </LinearGradient>
+      </TouchableOpacity>
 
       {/* Summary Cards Grid */}
       <View style={styles.sectionHeaderRow}>
         <Text style={styles.sectionTitle}>Overview</Text>
       </View>
       <View style={styles.summaryGrid}>
-        <View style={styles.summaryCard}>
+        <TouchableOpacity
+          style={styles.summaryCard}
+          activeOpacity={0.85}
+          onPress={() => navigation.navigate("Students")}
+        >
           <View style={[styles.summaryIconBg, { backgroundColor: "#EFF6FF" }]}>
             <Ionicons name="people" size={20} color="#2563EB" />
           </View>
           <Text style={styles.summaryValue}>{dashboardData?.studentCount || 0}</Text>
           <Text style={styles.summaryLabel}>Students</Text>
-        </View>
+        </TouchableOpacity>
 
-        <View style={styles.summaryCard}>
+        <TouchableOpacity
+          style={styles.summaryCard}
+          activeOpacity={0.85}
+          onPress={() => navigation.navigate("Assignments")}
+        >
           <View style={[styles.summaryIconBg, { backgroundColor: "#FEF3C7" }]}>
             <Ionicons name="document-text" size={20} color="#D97706" />
           </View>
           <Text style={styles.summaryValue}>{dashboardData?.assignmentCount || 0}</Text>
           <Text style={styles.summaryLabel}>Assignments</Text>
-        </View>
+        </TouchableOpacity>
 
-        <View style={styles.summaryCard}>
+        <TouchableOpacity
+          style={styles.summaryCard}
+          activeOpacity={0.85}
+          onPress={() => navigation.navigate("Grades")}
+        >
           <View style={[styles.summaryIconBg, { backgroundColor: "#F3E8FF" }]}>
             <Ionicons name="time" size={20} color="#9333EA" />
           </View>
           <Text style={styles.summaryValue}>{dashboardData?.pendingReviews || 0}</Text>
           <Text style={styles.summaryLabel}>Pending Reviews</Text>
-        </View>
+        </TouchableOpacity>
 
-        <View style={styles.summaryCard}>
+        <TouchableOpacity
+          style={styles.summaryCard}
+          activeOpacity={0.85}
+          onPress={() => navigation.navigate("Attendance")}
+        >
           <View style={[styles.summaryIconBg, { backgroundColor: "#FEF2F2" }]}>
             <Ionicons name="calendar" size={20} color="#EF4444" />
           </View>
           <Text style={styles.summaryValue}>{dashboardData?.attendancePending || 0}</Text>
           <Text style={styles.summaryLabel}>Attendance Pending</Text>
-        </View>
+        </TouchableOpacity>
       </View>
 
       {/* Quick Access Grid */}
