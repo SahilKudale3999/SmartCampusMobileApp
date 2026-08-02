@@ -11,3 +11,8 @@ export const getSubjectsByCourse = (courseId) => {
 export const getSubjectById = (id) => {
   return api.get(`/subject/${id}`);
 };
+
+// Was missing -- backend already exposes GET /subject/faculty/{facultyId}
+export const getSubjectsByFaculty = (facultyId) => {
+  return api.get(`/subject/faculty/${facultyId}`);
+};

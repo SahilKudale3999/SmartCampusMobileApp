@@ -2,11 +2,13 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const api = axios.create({
-  baseURL: "http://10.206.220.222:8080/api",
+  baseURL: "http://192.168.1.100:8080/api",
   headers: {
     "Content-Type": "application/json",
   },
+
 });
+
 
 api.interceptors.request.use(
   async (config) => {
@@ -20,9 +22,11 @@ api.interceptors.request.use(
     }
     return config;
   },
+
   (error) => {
     return Promise.reject(error);
   }
+  
 );
 
 api.interceptors.response.use(
@@ -34,6 +38,8 @@ api.interceptors.response.use(
     }
     return Promise.reject(error);
   }
+
 );
+
 
 export default api;
