@@ -6,9 +6,7 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-
 });
-
 
 api.interceptors.request.use(
   async (config) => {
@@ -22,11 +20,9 @@ api.interceptors.request.use(
     }
     return config;
   },
-
   (error) => {
     return Promise.reject(error);
   }
-  
 );
 
 api.interceptors.response.use(
@@ -38,8 +34,6 @@ api.interceptors.response.use(
     }
     return Promise.reject(error);
   }
-
 );
-
 
 export default api;
