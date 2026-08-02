@@ -18,6 +18,7 @@ import {
 import { useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import Colors from "../../constants/Colors";
 import api from "../../api/axios";
 
@@ -353,15 +354,26 @@ export default function ProfileScreen({ navigation }) {
               setAvatarPickerVisible(true);
             }}
           >
-            <View style={styles.avatarContainer}>
-              {selectedAvatar ? (
-                <Image
-                  source={{ uri: getAvatarUrl(selectedAvatar.style, selectedAvatar.seed) }}
-                  style={styles.avatarImage}
-                />
-              ) : (
-                <Text style={styles.avatarText}>{getInitials(profileData.fullName)}</Text>
-              )}
+            <View>
+              <LinearGradient
+                colors={["#F58529", "#DD2A7B", "#8134AF", "#515BD4"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.avatarRing}
+              >
+                <View style={styles.avatarInnerGap}>
+                  <View style={styles.avatarContainer}>
+                    {selectedAvatar ? (
+                      <Image
+                        source={{ uri: getAvatarUrl(selectedAvatar.style, selectedAvatar.seed) }}
+                        style={styles.avatarImage}
+                      />
+                    ) : (
+                      <Text style={styles.avatarText}>{getInitials(profileData.fullName)}</Text>
+                    )}
+                  </View>
+                </View>
+              </LinearGradient>
               <View style={styles.onlineBadge} />
               <View style={styles.editAvatarBadge}>
                 <Ionicons name="camera" size={12} color="#FFFFFF" />
@@ -787,17 +799,28 @@ const styles = StyleSheet.create({
     marginLeft: 16,
     alignItems: "flex-start",
   },
+  avatarRing: {
+    width: 98,
+    height: 98,
+    borderRadius: 49,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  avatarInnerGap: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: "#FFFFFF",
+    justifyContent: "center",
+    alignItems: "center",
+  },
   avatarContainer: {
-    width: 92,
-    height: 92,
-    borderRadius: 46,
+    width: 82,
+    height: 82,
+    borderRadius: 41,
     backgroundColor: Colors.primary || "#2563EB",
     justifyContent: "center",
     alignItems: "center",
-    elevation: 3,
-    borderWidth: 2,
-    borderColor: "#DBEAFE",
-    position: "relative",
     overflow: "hidden",
   },
   avatarImage: {
@@ -812,7 +835,7 @@ const styles = StyleSheet.create({
   onlineBadge: {
     position: "absolute",
     bottom: 4,
-    right: 4,
+    right: 2,
     width: 16,
     height: 16,
     borderRadius: 8,
@@ -823,7 +846,7 @@ const styles = StyleSheet.create({
   editAvatarBadge: {
     position: "absolute",
     bottom: 4,
-    left: 4,
+    left: 2,
     width: 24,
     height: 24,
     borderRadius: 12,
