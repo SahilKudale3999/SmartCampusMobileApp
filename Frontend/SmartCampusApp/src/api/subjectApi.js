@@ -16,3 +16,7 @@ export const getSubjectById = (id) => {
 export const getSubjectsByFaculty = (facultyId) => {
   return api.get(`/subject/faculty/${facultyId}`);
 };
+
+export const createSubject = (payload) => {
+  return api.post("/subject", payload);
+};

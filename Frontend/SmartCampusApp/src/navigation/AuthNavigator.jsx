@@ -6,32 +6,39 @@ import RegisterScreen from "../screens/Auth/RegisterScreen";
 import StudentNavigator from "./StudentNavigator";
 import FacultyNavigator from "./FacultyNavigator";
 
+import SplashScreen from "../screens/SplashScreen";
+
 const Stack = createNativeStackNavigator();
 
 export default function AuthNavigator() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+   <Stack.Navigator screenOptions={{ headerShown: false }}>
 
-      <Stack.Screen
-        name="Login"
-        component={LoginScreen}
-      />
+  <Stack.Navigator
+  initialRouteName="Splash"
+  screenOptions={{ headerShown:false }}
+/>
 
-      <Stack.Screen
-        name="Register"
-        component={RegisterScreen}
-      />
+  <Stack.Screen
+    name="Login"
+    component={LoginScreen}
+  />
 
-      <Stack.Screen
-        name="Student"
-        component={StudentNavigator}
-      />
+  <Stack.Screen
+    name="Register"
+    component={RegisterScreen}
+  />
 
-      <Stack.Screen
-        name="Faculty"
-        component={FacultyNavigator}
-      />
+  <Stack.Screen
+    name="Student"
+    component={StudentNavigator}
+  />
 
-    </Stack.Navigator>
+  <Stack.Screen
+    name="Faculty"
+    component={FacultyNavigator}
+  />
+
+</Stack.Navigator>
   );
 }
