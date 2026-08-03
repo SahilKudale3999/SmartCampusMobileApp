@@ -23,5 +23,6 @@ public class FacultyDashboardResponse {
     private int pendingReviews;
     private int attendancePending;
     private List<ActivityDTO> recentActivities;
+    private int noticeCount;
     
 }
