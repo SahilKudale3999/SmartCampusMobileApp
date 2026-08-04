@@ -23,6 +23,7 @@ import { getStudentsByCourse } from "../../api/studentApi";
 export default function StudentsScreen() {
   const [students, setStudents] = useState([]);
   const [courseName, setCourseName] = useState("");
+  const [courseCount, setCourseCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -51,9 +52,13 @@ export default function StudentsScreen() {
     scaleAnim.setValue(0);
   };
 
-  // Every subject under a faculty's course shares the same student roster,
-  // so we skip the subject-picker step entirely: fetch this faculty's
-  // subjects just to find their course, then load that course's students directly.
+  // A faculty member can teach subjects across MULTIPLE courses, so we can't
+  // just grab subjects[0] and load that one course's roster (that was the
+  // bug: home screen counted students across all courses, this screen only
+  // showed students from the first subject's course). Instead we collect
+  // every unique course this faculty teaches, fetch each course's roster,
+  // and merge + dedupe by studentId (a student could appear via more than
+  // one shared course).
   const loadRoster = async () => {
     setLoading(true);
     setErrorMsg("");
@@ -73,15 +78,35 @@ export default function StudentsScreen() {
 
       if (!subjects.length) {
         setStudents([]);
+        setCourseName("");
+        setCourseCount(0);
         setLoading(false);
         return;
       }
 
-      const primarySubject = subjects[0];
-      setCourseName(primarySubject.courseName || "");
+      const uniqueCourses = [
+        ...new Map(
+          subjects
+            .filter((s) => s.courseId)
+            .map((s) => [s.courseId, { courseId: s.courseId, courseName: s.courseName }])
+        ).values(),
+      ];
 
-      const studentsResponse = await getStudentsByCourse(primarySubject.courseId);
-      setStudents(studentsResponse.data?.data || studentsResponse.data || []);
+      setCourseCount(uniqueCourses.length);
+      setCourseName(uniqueCourses.length === 1 ? uniqueCourses[0].courseName || "" : "");
+
+      const studentsPerCourse = await Promise.all(
+        uniqueCourses.map((c) => getStudentsByCourse(c.courseId))
+      );
+
+      const allStudents = studentsPerCourse.flatMap(
+        (res) => res.data?.data || res.data || []
+      );
+
+      const dedupedMap = new Map();
+      allStudents.forEach((s) => dedupedMap.set(s.studentId, s));
+
+      setStudents([...dedupedMap.values()]);
     } catch (error) {
       console.log("Error loading roster:", error.response?.data || error.message);
       setErrorMsg("Failed to load student roster. Pull to refresh to try again.");
@@ -107,7 +132,11 @@ export default function StudentsScreen() {
           <View style={{ flex: 1 }}>
             <Text style={styles.header}>Students</Text>
             <Text style={styles.subHeader}>
-              {courseName ? `${courseName} \u2014 Class Roster & Directory` : "Class Roster & Directory"}
+              {courseName
+                ? `${courseName} \u2014 Class Roster & Directory`
+                : courseCount > 1
+                ? `${courseCount} Courses \u2014 Class Roster & Directory`
+                : "Class Roster & Directory"}
             </Text>
           </View>
         </View>
@@ -116,7 +145,9 @@ export default function StudentsScreen() {
         <View style={styles.activeSubjectBanner}>
           <View style={styles.activeSubjectBadge}>
             <Ionicons name="people-circle-outline" size={16} color="#2563EB" />
-            <Text style={styles.activeSubjectBadgeText}>{courseName || "All Students"}</Text>
+            <Text style={styles.activeSubjectBadgeText}>
+              {courseName || (courseCount > 1 ? "All Courses" : "All Students")}
+            </Text>
           </View>
           <Text style={styles.studentCountText}>{students.length} Enrolled</Text>
         </View>
