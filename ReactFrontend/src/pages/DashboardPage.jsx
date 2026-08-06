@@ -1,0 +1,4 @@
+import { useSelector } from "react-redux";
+import { Link } from "react-router-dom";
+import { visibleNavLinks } from "../config/roleAccess";
+export default function DashboardPage() { const { user } = useSelector((state) => state.auth); const links = visibleNavLinks(user?.role).filter((l) => l.path !== "/"); return <section className="page"><header className="page-head"><div><p className="eyebrow">Campus workspace</p><h2>Welcome{user?.fullName ? `, ${user.fullName}` : ""}</h2><p className="page-subtitle">Role: <strong>{user?.role ?? "Unknown"}</strong> · Choose a workspace to continue.</p></div></header><div className="dashboard-grid">{links.map((l, index) => <Link className="nav-card" key={l.path} to={l.path}><span className="card-index">{String(index + 1).padStart(2, "0")}</span><b>{l.label}</b><span>Open {l.label.toLowerCase()} workspace</span></Link>)}</div></section>; }
