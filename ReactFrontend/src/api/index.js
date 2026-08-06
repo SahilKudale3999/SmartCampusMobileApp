@@ -1,0 +1,12 @@
+export { default as axiosClient } from "./axiosClient";
+export { default as authApi } from "./authApi";
+export { default as userApi } from "./userApi";
+export { default as studentApi } from "./studentApi";
+export { default as facultyApi } from "./facultyApi";
+export { default as courseApi } from "./courseApi";
+export { default as subjectApi } from "./subjectApi";
+export { default as assignmentApi } from "./assignmentApi";
+export { default as attendanceApi } from "./attendanceApi";
+export { default as submissionApi } from "./submissionApi";
+export { default as eventApi } from "./eventApi";
+export { default as noticeApi } from "./noticeApi";
