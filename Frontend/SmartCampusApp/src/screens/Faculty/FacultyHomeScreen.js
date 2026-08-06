@@ -66,44 +66,16 @@ export default function FacultyHomeScreen({ navigation }) {
     }
   };
 
-  const handleLogout = () => {
-    Alert.alert(
-      "Logout",
-      "Are you sure you want to log out?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Logout",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await AsyncStorage.removeItem("user");
-              await AsyncStorage.removeItem("token");
-
-              navigation.reset({
-                index: 0,
-                routes: [{ name: "Login" }],
-              });
-            } catch (error) {
-              console.log("Error during logout:", error);
-            }
-          },
-        },
-      ],
-      { cancelable: true }
-    );
-  };
-
   if (loading && !dashboardData) {
     return (
       <View style={styles.loaderContainer}>
         <ActivityIndicator size="large" color={Colors.primary || "#2563EB"} />
-        <Text style={styles.loaderText}>Loading dashboard...</Text>
+        <Text style={styles.loaderText}>Loading your space...</Text>
       </View>
     );
   }
 
-  const facultyName = dashboardData?.facultyName || "Faculty";
+  const facultyName = dashboardData?.facultyName || "Faculty Member";
   const department = dashboardData?.department || "";
   const subjects = dashboardData?.subjects || [];
   const recentActivities = dashboardData?.recentActivities || [];
@@ -120,195 +92,162 @@ export default function FacultyHomeScreen({ navigation }) {
         />
       }
     >
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={{ flex: 1, marginRight: 10 }}>
-          <Text style={styles.greeting}>{getGreeting()}</Text>
-          <Text style={styles.name} numberOfLines={1}>{facultyName} 👋</Text>
-          {department ? (
-            <View style={styles.deptBadge}>
-              <Ionicons name="school-outline" size={12} color="#2563EB" style={{ marginRight: 4 }} />
-              <Text style={styles.deptBadgeText}>{department}</Text>
-            </View>
-          ) : null}
-        </View>
-
-        {/* Logout Button */}
-        <TouchableOpacity
-          style={styles.logoutButton}
-          activeOpacity={0.8}
-          onPress={handleLogout}
-        >
-          <Ionicons name="log-out-outline" size={20} color="#EF4444" />
-        </TouchableOpacity>
-      </View>
-
-      {/* My Subjects Hero Card with Gradient */}
+      {/* Hero Welcome Card Banner */}
       <LinearGradient
-        colors={[Colors.primary || "#2563EB", "#1D4ED8"]}
-        style={styles.subjectsCard}
+        colors={["#1E3A8A", "#2563EB", "#3B82F6"]}
+        style={styles.heroBanner}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
-        <View style={styles.subjectsHeader}>
-          <View style={styles.subjectsTitleRow}>
-            <Ionicons name="library" size={18} color="#93C5FD" style={{ marginRight: 8 }} />
-            <Text style={styles.subjectsTitle}>My Subjects</Text>
+        <View style={styles.heroContent}>
+          <View style={styles.greetingPill}>
+            <Ionicons name="sunny-outline" size={14} color="#93C5FD" style={{ marginRight: 6 }} />
+            <Text style={styles.greetingText}>{getGreeting()}</Text>
           </View>
-          <Ionicons name="chevron-forward-circle" size={22} color="#FFF" />
-        </View>
 
-        {subjects.length === 0 ? (
-          <Text style={styles.noSubjectsText}>No subjects assigned yet</Text>
-        ) : (
-          <>
-            <Text style={styles.subjectCount}>{dashboardData?.subjectCount || subjects.length}</Text>
-            <Text style={styles.subjectCountLabel}>
-              {(dashboardData?.subjectCount || subjects.length) === 1 ? "Subject Assigned" : "Subjects Assigned"}
-            </Text>
+          <Text style={styles.facultyNameText} numberOfLines={1}>
+            {facultyName} ✨
+          </Text>
 
-            <View style={styles.subjectChipsRow}>
-              {subjects.slice(0, 4).map((subject, index) => (
-                <View key={subject.subjectId || index} style={styles.subjectChip}>
-                  <Text style={styles.subjectChipText} numberOfLines={1}>
-                    {subject.subjectName}
-                  </Text>
-                </View>
-              ))}
-              {subjects.length > 4 && (
-                <View style={styles.subjectChip}>
-                  <Text style={styles.subjectChipText}>+{subjects.length - 4} more</Text>
-                </View>
-              )}
+          {department ? (
+            <View style={styles.departmentPill}>
+              <Ionicons name="school-outline" size={14} color="#FFFFFF" style={{ marginRight: 6 }} />
+              <Text style={styles.departmentText}>{department}</Text>
             </View>
-          </>
-        )}
+          ) : null}
+        </View>
       </LinearGradient>
 
-      {/* Summary Cards Grid */}
-      <View style={styles.sectionHeaderRow}>
+      {/* My Courses / Subjects Card */}
+      <TouchableOpacity
+        activeOpacity={0.92}
+        onPress={() => navigation.navigate("Subjects")}
+        style={styles.cardContainer}
+      >
+        <View style={styles.subjectsCard}>
+          <View style={styles.cardHeaderRow}>
+            <View style={styles.cardTitleGroup}>
+              <View style={[styles.iconBox, { backgroundColor: "#EFF6FF" }]}>
+                <Ionicons name="library" size={20} color="#2563EB" />
+              </View>
+              <View>
+                <Text style={styles.cardMainTitle}>Assigned Courses</Text>
+                <Text style={styles.cardSubTitle}>Manage your classes & syllabi</Text>
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
+          </View>
+
+          {subjects.length === 0 ? (
+            <Text style={styles.emptyText}>No courses assigned yet</Text>
+          ) : (
+            <View style={styles.courseScrollWrapper}>
+              <Text style={styles.courseBigCount}>{dashboardData?.subjectCount || subjects.length} Active Courses</Text>
+              <View style={styles.chipsContainer}>
+                {subjects.map((subject, index) => (
+                  <View key={subject.subjectId || index} style={styles.courseChip}>
+                    <Ionicons name="book-outline" size={12} color="#2563EB" style={{ marginRight: 5 }} />
+                    <Text style={styles.courseChipText} numberOfLines={1}>
+                      {subject.subjectName}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+        </View>
+      </TouchableOpacity>
+
+      {/* Overview Grid Cards */}
+      <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Overview</Text>
       </View>
-      <View style={styles.summaryGrid}>
-        <View style={styles.summaryCard}>
-          <View style={[styles.summaryIconBg, { backgroundColor: "#EFF6FF" }]}>
-            <Ionicons name="people" size={20} color="#2563EB" />
-          </View>
-          <Text style={styles.summaryValue}>{dashboardData?.studentCount || 0}</Text>
-          <Text style={styles.summaryLabel}>Students</Text>
-        </View>
-
-        <View style={styles.summaryCard}>
-          <View style={[styles.summaryIconBg, { backgroundColor: "#FEF3C7" }]}>
-            <Ionicons name="document-text" size={20} color="#D97706" />
-          </View>
-          <Text style={styles.summaryValue}>{dashboardData?.assignmentCount || 0}</Text>
-          <Text style={styles.summaryLabel}>Assignments</Text>
-        </View>
-
-        <View style={styles.summaryCard}>
-          <View style={[styles.summaryIconBg, { backgroundColor: "#F3E8FF" }]}>
-            <Ionicons name="time" size={20} color="#9333EA" />
-          </View>
-          <Text style={styles.summaryValue}>{dashboardData?.pendingReviews || 0}</Text>
-          <Text style={styles.summaryLabel}>Pending Reviews</Text>
-        </View>
-
-        <View style={styles.summaryCard}>
-          <View style={[styles.summaryIconBg, { backgroundColor: "#FEF2F2" }]}>
-            <Ionicons name="calendar" size={20} color="#EF4444" />
-          </View>
-          <Text style={styles.summaryValue}>{dashboardData?.attendancePending || 0}</Text>
-          <Text style={styles.summaryLabel}>Attendance Pending</Text>
-        </View>
-      </View>
-
-      {/* Quick Access Grid */}
-      <View style={styles.sectionHeaderRow}>
-        <Text style={styles.sectionTitle}>Quick Actions</Text>
-      </View>
-      <View style={styles.grid}>
+      <View style={styles.statsGrid}>
         <TouchableOpacity
-          style={[styles.actionCard, { borderLeftColor: "#2563EB" }]}
-          activeOpacity={0.85}
-          onPress={() => navigation.navigate("Attendance")}
-        >
-          <View style={[styles.actionIconBg, { backgroundColor: "#EFF6FF" }]}>
-            <Ionicons name="checkmark-done" size={24} color="#2563EB" />
-          </View>
-          <View style={styles.actionTextContainer}>
-            <Text style={styles.actionText}>Take Attendance</Text>
-            <Text style={styles.actionSubText}>Mark today's class</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={16} color="#CBD5E1" />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.actionCard, { borderLeftColor: "#16A34A" }]}
-          activeOpacity={0.85}
+          style={[styles.statBox, { borderColor: "#BFDBFE" }]}
+          activeOpacity={0.88}
           onPress={() => navigation.navigate("Students")}
         >
-          <View style={[styles.actionIconBg, { backgroundColor: "#F0FDF4" }]}>
-            <Ionicons name="people" size={24} color="#16A34A" />
+          <View style={[styles.statIconContainer, { backgroundColor: "#EFF6FF" }]}>
+            <Ionicons name="people" size={22} color="#2563EB" />
           </View>
-          <View style={styles.actionTextContainer}>
-            <Text style={styles.actionText}>Students</Text>
-            <Text style={styles.actionSubText}>Directory & contact</Text>
+          <Text style={styles.statNumber}>{dashboardData?.studentCount || 0}</Text>
+          <Text style={styles.statLabel}>Students</Text>
+          <View style={styles.statLinkRow}>
+            <Text style={[styles.statLinkText, { color: "#2563EB" }]}>View roster</Text>
+            <Ionicons name="arrow-forward" size={11} color="#2563EB" />
           </View>
-          <Ionicons name="chevron-forward" size={16} color="#CBD5E1" />
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.actionCard, { borderLeftColor: "#D97706" }]}
-          activeOpacity={0.85}
+          style={[styles.statBox, { borderColor: "#FDE68A" }]}
+          activeOpacity={0.88}
           onPress={() => navigation.navigate("Assignments")}
         >
-          <View style={[styles.actionIconBg, { backgroundColor: "#FEF3C7" }]}>
-            <Ionicons name="document-text" size={24} color="#D97706" />
+          <View style={[styles.statIconContainer, { backgroundColor: "#FEF3C7" }]}>
+            <Ionicons name="document-text" size={22} color="#D97706" />
           </View>
-          <View style={styles.actionTextContainer}>
-            <Text style={styles.actionText}>Assignments</Text>
-            <Text style={styles.actionSubText}>Create & manage</Text>
+          <Text style={styles.statNumber}>{dashboardData?.assignmentCount || 0}</Text>
+          <Text style={styles.statLabel}>Assignments</Text>
+          <View style={styles.statLinkRow}>
+            <Text style={[styles.statLinkText, { color: "#D97706" }]}>Create & manage</Text>
+            <Ionicons name="arrow-forward" size={11} color="#D97706" />
           </View>
-          <Ionicons name="chevron-forward" size={16} color="#CBD5E1" />
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.actionCard, { borderLeftColor: "#9333EA" }]}
-          activeOpacity={0.85}
+          style={[styles.statBox, { borderColor: "#E9D5FF" }]}
+          activeOpacity={0.88}
           onPress={() => navigation.navigate("Grades")}
         >
-          <View style={[styles.actionIconBg, { backgroundColor: "#F3E8FF" }]}>
-            <Ionicons name="ribbon" size={24} color="#9333EA" />
+          <View style={[styles.statIconContainer, { backgroundColor: "#F3E8FF" }]}>
+            <Ionicons name="ribbon" size={22} color="#9333EA" />
           </View>
-          <View style={styles.actionTextContainer}>
-            <Text style={styles.actionText}>Grade Submissions</Text>
-            <Text style={styles.actionSubText}>Review student work</Text>
+          <Text style={styles.statNumber}>{dashboardData?.pendingReviews || 0}</Text>
+          <Text style={styles.statLabel}>Grading Queue</Text>
+          <View style={styles.statLinkRow}>
+            <Text style={[styles.statLinkText, { color: "#9333EA" }]}>Review items</Text>
+            <Ionicons name="arrow-forward" size={11} color="#9333EA" />
           </View>
-          <Ionicons name="chevron-forward" size={16} color="#CBD5E1" />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.statBox, { borderColor: "#FECACA" }]}
+          activeOpacity={0.88}
+          onPress={() => navigation.navigate("Attendance")}
+        >
+          <View style={[styles.statIconContainer, { backgroundColor: "#FEF2F2" }]}>
+            <Ionicons name="checkmark-done-circle" size={22} color="#EF4444" />
+          </View>
+          <Text style={styles.statNumber}>{dashboardData?.attendancePending || 0}</Text>
+          <Text style={styles.statLabel}>Attendance Due</Text>
+          <View style={styles.statLinkRow}>
+            <Text style={[styles.statLinkText, { color: "#EF4444" }]}>Take sheet</Text>
+            <Ionicons name="arrow-forward" size={11} color="#EF4444" />
+          </View>
         </TouchableOpacity>
       </View>
 
-      {/* Recent Activities Section */}
-      <View style={styles.sectionHeaderRow}>
+      {/* Recent Activity Log */}
+      <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Recent Activities</Text>
       </View>
-      <View style={styles.activitiesContainer}>
+      <View style={styles.activityBox}>
         {recentActivities.length === 0 ? (
-          <View style={styles.emptyActivityCard}>
-            <Ionicons name="pulse-outline" size={24} color="#94A3B8" />
-            <Text style={styles.emptyActivityText}>No recent activities found</Text>
+          <View style={styles.emptyActivityView}>
+            <Ionicons name="pulse-outline" size={24} color="#CBD5E1" />
+            <Text style={styles.emptyActivityString}>No recent activity logs recorded</Text>
           </View>
         ) : (
           recentActivities.map((activity, index) => (
-            <View key={index} style={styles.activityItem}>
+            <View key={index} style={styles.activityRow}>
               <View style={styles.activityIconCircle}>
-                <Ionicons name="flash-outline" size={16} color="#2563EB" />
+                <Ionicons name="flash" size={14} color="#2563EB" />
               </View>
-              <View style={styles.activityContentWrapper}>
-                <Text style={styles.activityTitle}>{activity.title || activity.type || "Activity"}</Text>
-                <Text style={styles.activityDescription} numberOfLines={1}>
-                  {activity.description || activity.message || "New update recorded"}
+              <View style={styles.activityDetails}>
+                <Text style={styles.activityHeaderTitle}>{activity.title || activity.type || "Activity"}</Text>
+                <Text style={styles.activityHeaderSub} numberOfLines={1}>
+                  {activity.description || activity.message || "System update"}
                 </Text>
               </View>
             </View>
@@ -316,7 +255,7 @@ export default function FacultyHomeScreen({ navigation }) {
         )}
       </View>
 
-      <View style={{ height: 35 }} />
+      <View style={{ height: 40 }} />
     </ScrollView>
   );
 }
@@ -326,6 +265,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F8FAFC",
     paddingHorizontal: 20,
+    paddingTop: 50,
   },
   loaderContainer: {
     flex: 1,
@@ -334,225 +274,213 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8FAFC",
   },
   loaderText: {
-    marginTop: 10,
+    marginTop: 12,
     color: "#64748B",
     fontWeight: "600",
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 50,
-    marginBottom: 20,
-  },
-  greeting: {
-    color: "#64748B",
     fontSize: 14,
-    fontWeight: "600",
   },
-  name: {
-    fontSize: 26,
-    fontWeight: "800",
-    color: "#0F172A",
-    marginTop: 2,
-  },
-  deptBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#EFF6FF",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-    marginTop: 8,
-    alignSelf: "flex-start",
-    borderWidth: 1,
-    borderColor: "#DBEAFE",
-  },
-  deptBadgeText: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#2563EB",
-  },
-  logoutButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    backgroundColor: "#FEF2F2",
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#FEE2E2",
-  },
-  subjectsCard: {
-    borderRadius: 22,
-    padding: 20,
+  heroBanner: {
+    borderRadius: 24,
+    paddingVertical: 26,
+    paddingHorizontal: 20,
     marginBottom: 20,
-    elevation: 4,
+    elevation: 6,
     shadowColor: "#2563EB",
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
     shadowOffset: { width: 0, height: 6 },
   },
-  subjectsHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  heroContent: {
     alignItems: "center",
   },
-  subjectsTitleRow: {
+  greetingPill: {
     flexDirection: "row",
     alignItems: "center",
-  },
-  subjectsTitle: {
-    color: "#DBEAFE",
-    fontSize: 15,
-    fontWeight: "700",
-  },
-  noSubjectsText: {
-    color: "#DBEAFE",
-    fontSize: 13,
-    fontWeight: "600",
-    marginTop: 16,
-  },
-  subjectCount: {
-    color: "#FFFFFF",
-    fontSize: 38,
-    fontWeight: "800",
-    marginTop: 12,
-  },
-  subjectCountLabel: {
-    color: "#93C5FD",
-    fontSize: 12,
-    fontWeight: "700",
-    marginTop: 2,
-    marginBottom: 14,
-  },
-  subjectChipsRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  subjectChip: {
     backgroundColor: "rgba(255, 255, 255, 0.15)",
     paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 10,
-    maxWidth: "48%",
-  },
-  subjectChipText: {
-    color: "#FFFFFF",
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  sectionHeaderRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: "#0F172A",
-  },
-  summaryGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
+    paddingVertical: 5,
+    borderRadius: 20,
     marginBottom: 10,
   },
-  summaryCard: {
-    width: "48%",
+  greetingText: {
+    color: "#E0F2FE",
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+  },
+  facultyNameText: {
+    fontSize: 26,
+    fontWeight: "900",
+    color: "#FFFFFF",
+    textAlign: "center",
+    marginBottom: 10,
+  },
+  departmentPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 14,
+  },
+  departmentText: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  cardContainer: {
+    marginBottom: 20,
+  },
+  subjectsCard: {
     backgroundColor: "#FFFFFF",
-    padding: 16,
-    borderRadius: 20,
-    marginBottom: 14,
-    elevation: 2,
+    borderRadius: 22,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    elevation: 3,
     shadowColor: "#0F172A",
     shadowOpacity: 0.05,
     shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 },
-    borderWidth: 1,
-    borderColor: "#F1F5F9",
+    shadowOffset: { width: 0, height: 4 },
   },
-  summaryIconBg: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  summaryValue: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: "#0F172A",
-  },
-  summaryLabel: {
-    fontSize: 11,
-    color: "#64748B",
-    fontWeight: "600",
-    marginTop: 2,
-  },
-  grid: {
+  cardHeaderRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
     justifyContent: "space-between",
-    marginBottom: 10,
-  },
-  actionCard: {
-    width: "48%",
-    backgroundColor: "#FFFFFF",
-    paddingVertical: 18,
-    paddingHorizontal: 14,
-    borderRadius: 20,
     alignItems: "center",
     marginBottom: 14,
-    elevation: 3,
-    shadowColor: "#0F172A",
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    borderWidth: 1,
-    borderColor: "#F1F5F9",
-    borderLeftWidth: 4,
-    flexDirection: "row",
   },
-  actionIconBg: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+  cardTitleGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  iconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
     justifyContent: "center",
     alignItems: "center",
     marginRight: 10,
   },
-  actionTextContainer: {
-    flex: 1,
-  },
-  actionText: {
+  cardMainTitle: {
+    fontSize: 15,
     fontWeight: "800",
-    fontSize: 13,
     color: "#0F172A",
   },
-  actionSubText: {
-    fontSize: 10,
+  cardSubTitle: {
+    fontSize: 11,
     color: "#64748B",
     fontWeight: "600",
-    marginTop: 1,
   },
-  activitiesContainer: {
+  emptyText: {
+    color: "#94A3B8",
+    fontSize: 13,
+    fontWeight: "600",
+    textAlign: "center",
+    paddingVertical: 10,
+  },
+  courseScrollWrapper: {
+    marginTop: 4,
+  },
+  courseBigCount: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: "#2563EB",
+    marginBottom: 10,
+  },
+  chipsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  courseChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F1F5F9",
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 12,
+    maxWidth: "48%",
+  },
+  courseChipText: {
+    color: "#334155",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  sectionHeader: {
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    fontSize: 17,
+    fontWeight: "800",
+    color: "#0F172A",
+  },
+  statsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    marginBottom: 14,
+  },
+  statBox: {
+    width: "48%",
+    backgroundColor: "#FFFFFF",
+    padding: 16,
+    borderRadius: 20,
+    marginBottom: 14,
+    borderWidth: 1.5,
+    elevation: 3,
+    shadowColor: "#0F172A",
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+  },
+  statIconContainer: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  statNumber: {
+    fontSize: 24,
+    fontWeight: "900",
+    color: "#0F172A",
+  },
+  statLabel: {
+    fontSize: 12,
+    color: "#334155",
+    fontWeight: "700",
+    marginTop: 2,
+  },
+  statLinkRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 10,
+    gap: 4,
+  },
+  statLinkText: {
+    fontSize: 11,
+    fontWeight: "800",
+  },
+  activityBox: {
     backgroundColor: "#FFFFFF",
     borderRadius: 20,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#F1F5F9",
-    marginBottom: 20,
+    borderColor: "#E2E8F0",
+    elevation: 2,
+    shadowColor: "#0F172A",
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
   },
-  activityItem: {
+  activityRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#F8FAFC",
+    borderBottomColor: "#F1F5F9",
   },
   activityIconCircle: {
     width: 32,
@@ -563,27 +491,28 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginRight: 12,
   },
-  activityContentWrapper: {
+  activityDetails: {
     flex: 1,
   },
-  activityTitle: {
+  activityHeaderTitle: {
     fontSize: 13,
-    fontWeight: "700",
-    color: "#1E293B",
+    fontWeight: "800",
+    color: "#0F172A",
   },
-  activityDescription: {
+  activityHeaderSub: {
     fontSize: 11,
     color: "#64748B",
-    marginTop: 1,
+    marginTop: 2,
+    fontWeight: "500",
   },
-  emptyActivityCard: {
+  emptyActivityView: {
     alignItems: "center",
-    paddingVertical: 20,
+    paddingVertical: 22,
   },
-  emptyActivityText: {
+  emptyActivityString: {
     color: "#94A3B8",
     fontSize: 12,
     fontWeight: "600",
-    marginTop: 6,
+    marginTop: 8,
   },
 });

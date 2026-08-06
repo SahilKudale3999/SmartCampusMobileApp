@@ -27,6 +27,7 @@ import com.smartcampus.repository.AssignmentRepository;
 import com.smartcampus.repository.AttendanceRepository;
 import com.smartcampus.repository.CourseRepository;
 import com.smartcampus.repository.FacultyRepository;
+import com.smartcampus.repository.NoticeRepository;
 import com.smartcampus.repository.StudentRepository;
 import com.smartcampus.repository.SubjectRepository;
 import com.smartcampus.repository.SubmissionRepository;
@@ -47,6 +48,7 @@ public class FacultyService {
 	private final AssignmentRepository assignmentRepository;
 	private final SubmissionRepository submissionRepository;
 	private final AttendanceRepository attendanceRepository;
+	private final NoticeRepository noticeRepository;
 	
 	private Faculty findFaculty(Integer id) {
         return facultyRepository.findById(id)
@@ -110,61 +112,86 @@ public class FacultyService {
 		            .build();
 	    }
 	 
+	 
 	 public FacultyDashboardResponse getFacultyDashboard(Integer facultyId) {
-		    Faculty faculty = findFaculty(facultyId);
 
-		    List<Subject> subjectEntities = subjectRepository.findByFacultyFacultyId(facultyId);
+	     Faculty faculty = findFaculty(facultyId);
 
-		    List<SubjectResponse> subjects = subjectEntities.stream()
-		            .map(s -> SubjectResponse.builder()
-		                    .subjectId(s.getSubjectId())
-		                    .subjectName(s.getSubjectName())
-		                    .courseId(s.getCourse().getCourseId())
-		                    .courseName(s.getCourse().getCourseName())
-		                    .facultyId(faculty.getFacultyId())
-		                    .facultyName(faculty.getUserId().getFullName())
-		                    .build())
-		            .toList();
+	     List<Subject> subjectEntities =
+	             subjectRepository.findByFacultyFacultyId(facultyId);
 
-		    List<Integer> subjectIds = subjectEntities.stream()
-		            .map(Subject::getSubjectId)
-		            .toList();
+	     List<SubjectResponse> subjects =
+	             subjectEntities.stream()
+	                     .map(s -> SubjectResponse.builder()
+	                             .subjectId(s.getSubjectId())
+	                             .subjectName(s.getSubjectName())
+	                             .courseId(s.getCourse().getCourseId())
+	                             .courseName(s.getCourse().getCourseName())
+	                             .facultyId(faculty.getFacultyId())
+	                             .facultyName(faculty.getUserId().getFullName())
+	                             .build())
+	                     .toList();
 
-		    List<Integer> courseIds = subjectEntities.stream()
-		            .map(s -> s.getCourse().getCourseId())
-		            .distinct()
-		            .toList();
+	     List<Integer> subjectIds =
+	             subjectEntities.stream()
+	                     .map(Subject::getSubjectId)
+	                     .toList();
 
-		    long studentCount = courseIds.isEmpty() ? 0
-		            : studentRepository.countByCourseCourseIdIn(courseIds);
+	     List<Integer> courseIds =
+	             subjectEntities.stream()
+	                     .map(s -> s.getCourse().getCourseId())
+	                     .distinct()
+	                     .toList();
 
-		    int assignmentCount = subjectIds.isEmpty() ? 0
-		            : assignmentRepository.findBySubjectSubjectIdIn(subjectIds).size();
+	     long studentCount =
+	             courseIds.isEmpty()
+	                     ? 0
+	                     : studentRepository.countByCourseCourseIdIn(courseIds);
 
-		    long pendingReviews = subjectIds.isEmpty() ? 0
-		            : submissionRepository.countPendingBySubjectIds(subjectIds);
+	     int assignmentCount =
+	             subjectIds.isEmpty()
+	                     ? 0
+	                     : assignmentRepository.findBySubjectSubjectIdIn(subjectIds).size();
 
-		    int attendancePending = 0;
-		    if (!subjectIds.isEmpty()) {
-		        List<Integer> markedToday = attendanceRepository
-		                .findSubjectIdsMarkedOnDate(subjectIds, LocalDate.now());
-		        attendancePending = subjectIds.size() - markedToday.size();
-		    }
+	     long pendingReviews =
+	             subjectIds.isEmpty()
+	                     ? 0
+	                     : submissionRepository.countPendingBySubjectIds(subjectIds);
 
-		    List<ActivityDTO> recentActivities = buildRecentActivities(subjectIds);
+	     int attendancePending = 0;
 
-		    return FacultyDashboardResponse.builder()
-		            .facultyName(faculty.getUserId().getFullName())
-		            .department(faculty.getDepartment())
-		            .subjects(subjects)
-		            .subjectCount(subjects.size())
-		            .studentCount((int) studentCount)
-		            .assignmentCount(assignmentCount)
-		            .pendingReviews((int) pendingReviews)
-		            .attendancePending(attendancePending)
-		            .recentActivities(recentActivities)
-		            .build();
-		}
+	     if (!subjectIds.isEmpty()) {
+
+	         List<Integer> markedToday =
+	                 attendanceRepository.findSubjectIdsMarkedOnDate(
+	                         subjectIds,
+	                         LocalDate.now());
+
+	         attendancePending =
+	                 subjectIds.size() - markedToday.size();
+	     }
+
+	     List<ActivityDTO> recentActivities =
+	             buildRecentActivities(subjectIds);
+
+	     int noticeCount =
+	    	        (int) noticeRepository.countByCreatedByUserId(
+	    	                faculty.getUserId().getUserId()
+	    	        );
+
+	     return FacultyDashboardResponse.builder()
+	             .facultyName(faculty.getUserId().getFullName())
+	             .department(faculty.getDepartment())
+	             .subjects(subjects)
+	             .subjectCount(subjects.size())
+	             .studentCount((int) studentCount)
+	             .noticeCount(noticeCount)
+	             .assignmentCount(assignmentCount)
+	             .pendingReviews((int) pendingReviews)
+	             .attendancePending(attendancePending)
+	             .recentActivities(recentActivities)
+	             .build();
+	 }
 
 	 private List<ActivityDTO> buildRecentActivities(List<Integer> subjectIds) {
 		    if (subjectIds.isEmpty()) {

@@ -148,15 +148,10 @@ export default function StudentHomeScreen({ navigation }) {
     }
   };
 
-  // "FacultyDirectory" is registered in the outer Stack.Navigator (StudentNavigator),
-  // not in the Tab.Navigator. React Navigation automatically bubbles an unhandled
-  // route name up to parent navigators, so a plain navigate() call is enough.
   const handleNavigateFaculty = () => {
     navigation.navigate("FacultyDirectory");
   };
 
-  // "Notices" is a sibling tab inside the same Tab.Navigator as this screen ("Home"),
-  // so a plain navigate() call resolves it directly.
   const handleNavigateNotices = () => {
     navigation.navigate("Notices");
   };
