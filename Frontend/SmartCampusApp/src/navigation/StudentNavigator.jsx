@@ -12,7 +12,8 @@ import AssignmentScreen from "../screens/Student/AssignmentScreen";
 import AttendanceScreen from "../screens/Student/AttendanceScreen";
 import SubmissionScreen from "../screens/Student/SubmissionScreen";
 import FacultyDirectoryScreen from "../screens/Student/FacultyDirectoryScreen";
-import ResultScreen from "../screens/Student/ResultScreen"; 
+import ResultScreen from "../screens/Student/ResultScreen";
+import ChatbotScreen from "../screens/ChatbotScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -119,10 +120,15 @@ export default function StudentNavigator() {
         component={ResultScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen 
-        name="Profile" 
-        component={ProfileScreen} 
-        options={{ headerShown: false }} 
+      <Stack.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Chatbot"
+        component={ChatbotScreen}
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );

@@ -13,6 +13,7 @@ import AttendanceScreen from "../screens/Faculty/AttendanceScreen";
 import StudentScreen from "../screens/Faculty/StudentScreen";
 import AssignmentScreen from "../screens/Faculty/AssignmentScreen";
 import GradeScreen from "../screens/Faculty/GradeScreen";
+import ChatbotScreen from "../screens/ChatbotScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -121,6 +122,12 @@ export default function FacultyNavigator() {
         name="Grades"
         component={GradeScreen}
         options={{ title: "Grade Submissions" }}
+      />
+
+      <Stack.Screen
+        name="Chatbot"
+        component={ChatbotScreen}
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );

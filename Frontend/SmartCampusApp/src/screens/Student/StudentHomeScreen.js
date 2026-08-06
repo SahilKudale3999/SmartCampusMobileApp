@@ -17,6 +17,7 @@ import { getAllNotices } from "../../api/noticeApi";
 import { getAllEvents } from "../../api/eventApi";
 import { getAttendanceByStudent } from "../../api/attendanceApi";
 import Colors from "../../constants/Colors";
+import { ChatbotLauncher } from "../ChatbotScreen";
 
 const getGreeting = () => {
   const hour = new Date().getHours();
@@ -159,298 +160,302 @@ export default function StudentHomeScreen({ navigation }) {
   const feedback = getAttendanceFeedback(attendancePercentage);
 
   return (
-    <ScrollView 
-      style={styles.container} 
-      showsVerticalScrollIndicator={false}
-      refreshControl={
-        <RefreshControl 
-          refreshing={refreshing} 
-          onRefresh={onRefresh} 
-          colors={[Colors.primary || "#2563EB"]} 
-        />
-      }
-    >
-      {/* Header View */}
-      <View style={styles.header}>
-        <View style={{ flex: 1, marginRight: 10 }}>
-          <Text style={styles.greeting}>{getGreeting()}</Text>
-          <Text style={styles.name} numberOfLines={1}>{studentName} ✨</Text>
-          <Text style={styles.subGreeting}>Let's make today count and achieve your goals!</Text>
-        </View>
-
-        <TouchableOpacity 
-          style={styles.notification} 
-          activeOpacity={0.8}
-          onPress={() => setNotificationModalVisible(true)}
-        >
-          <Ionicons name="notifications" size={22} color={Colors.primary || "#2563EB"} />
-          {allNoticesList.length > 0 && <View style={styles.notificationBadgeDot} />}
-        </TouchableOpacity>
-      </View>
-
-      {/* Attendance Summary Banner Card */}
-      <TouchableOpacity 
-        style={styles.attendanceCard}
-        activeOpacity={0.9}
-        onPress={() => navigation.navigate("AttendanceDetail")}
+    <View style={{ flex: 1 }}>
+      <ScrollView 
+        style={styles.container} 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh} 
+            colors={[Colors.primary || "#2563EB"]} 
+          />
+        }
       >
-        <View style={styles.attendanceHeader}>
-          <View style={styles.attendanceTitleRow}>
-            <Ionicons name="stats-chart" size={18} color="#93C5FD" style={{ marginRight: 8 }} />
-            <Text style={styles.attendanceTitle}>Attendance Overview</Text>
+        {/* Header View */}
+        <View style={styles.header}>
+          <View style={{ flex: 1, marginRight: 10 }}>
+            <Text style={styles.greeting}>{getGreeting()}</Text>
+            <Text style={styles.name} numberOfLines={1}>{studentName} ✨</Text>
+            <Text style={styles.subGreeting}>Let's make today count and achieve your goals!</Text>
           </View>
-          <Ionicons name="chevron-forward-circle" size={22} color="#FFF" />
-        </View>
 
-        {loadingAttendance ? (
-          <ActivityIndicator color="#FFF" style={{ marginVertical: 20 }} />
-        ) : (
-          <>
-            <View style={styles.attendanceValueRow}>
-              <Text style={styles.attendanceValue}>{attendancePercentage}%</Text>
-              <View style={[styles.feedbackBadge, { backgroundColor: "rgba(255, 255, 255, 0.15)" }]}>
-                <Text style={[styles.attendanceFeedback, { color: feedback.color }]}>
-                  {feedback.message}
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.progressBackground}>
-              <View style={[styles.progressFill, { width: `${Math.min(attendancePercentage, 100)}%` }]} />
-            </View>
-
-            <Text style={styles.tapDetailsText}>Tap to view subject breakdown</Text>
-          </>
-        )}
-      </TouchableOpacity>
-
-      {/* Results Highlight Banner */}
-      <TouchableOpacity
-        style={styles.resultsBanner}
-        activeOpacity={0.88}
-        onPress={() => navigation.navigate("Results")}
-      >
-        <View style={styles.resultsBannerLeft}>
-          <View style={styles.ribbonIconBg}>
-            <Ionicons name="ribbon" size={22} color="#FFF" />
-          </View>
-          <View style={{ marginLeft: 12 }}>
-            <Text style={styles.resultsTitle}>Grades & Academic Results</Text>
-            <Text style={styles.resultsSub}>Check evaluated marks & grades</Text>
-          </View>
-        </View>
-        <Ionicons name="chevron-forward" size={20} color="#2563EB" />
-      </TouchableOpacity>
-
-      {/* Quick Access Grid */}
-      <View style={styles.sectionHeaderRow}>
-        <Text style={styles.sectionTitle}>Quick Access</Text>
-      </View>
-      <View style={styles.grid}>
-        <TouchableOpacity
-          style={[styles.actionCard, { borderLeftColor: "#2563EB" }]}
-          activeOpacity={0.85}
-          onPress={() => navigation.getParent()?.navigate("Subjects")}
-        >
-          <View style={[styles.actionIconBg, { backgroundColor: "#EFF6FF" }]}>
-            <Ionicons name="library" size={26} color="#2563EB" />
-          </View>
-          <View style={styles.actionTextContainer}>
-            <Text style={styles.actionText}>Subjects</Text>
-            <Text style={styles.actionSubText}>View enrolled modules</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={16} color="#CBD5E1" />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.actionCard, { borderLeftColor: "#16A34A" }]}
-          activeOpacity={0.85}
-          onPress={() => navigation.getParent()?.navigate("Subjects")}
-        >
-          <View style={[styles.actionIconBg, { backgroundColor: "#F0FDF4" }]}>
-            <Ionicons name="document-text" size={26} color="#16A34A" />
-          </View>
-          <View style={styles.actionTextContainer}>
-            <Text style={styles.actionText}>Assignments</Text>
-            <Text style={styles.actionSubText}>Pending & submissions</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={16} color="#CBD5E1" />
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={[styles.actionCard, { borderLeftColor: "#D97706" }]}
-          activeOpacity={0.85}
-          onPress={() => navigation.navigate("Results")}
-        >
-          <View style={[styles.actionIconBg, { backgroundColor: "#FEF3C7" }]}>
-            <Ionicons name="bar-chart" size={26} color="#D97706" />
-          </View>
-          <View style={styles.actionTextContainer}>
-            <Text style={styles.actionText}>Results</Text>
-            <Text style={styles.actionSubText}>Scores & GPA tracking</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={16} color="#CBD5E1" />
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={[styles.actionCard, { borderLeftColor: "#9333EA" }]}
-          activeOpacity={0.85}
-          onPress={handleNavigateFaculty}
-        >
-          <View style={[styles.actionIconBg, { backgroundColor: "#F3E8FF" }]}>
-            <Ionicons name="people" size={26} color="#9333EA" />
-          </View>
-          <View style={styles.actionTextContainer}>
-            <Text style={styles.actionText}>Faculty</Text>
-            <Text style={styles.actionSubText}>Directory & contact</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={16} color="#CBD5E1" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Recent Notices Preview Section */}
-      <View style={styles.sectionHeaderRow}>
-        <Text style={styles.sectionTitle}>Recent Notices</Text>
-        <TouchableOpacity onPress={handleNavigateNotices}>
-          <Text style={styles.viewAllText}>View All</Text>
-        </TouchableOpacity>
-      </View>
-
-      {loadingNotices ? (
-        <ActivityIndicator size="small" color={Colors.primary || "#2563EB"} style={styles.sectionLoader} />
-      ) : notices.length === 0 ? (
-        <View style={styles.emptyBox}>
-          <Text style={styles.emptyText}>No recent notices posted</Text>
-        </View>
-      ) : (
-        notices.map((notice, index) => (
           <TouchableOpacity 
-            key={notice.noticeId || index} 
-            style={styles.previewCard}
-            activeOpacity={0.85}
-            onPress={handleNavigateNotices}
+            style={styles.notification} 
+            activeOpacity={0.8}
+            onPress={() => setNotificationModalVisible(true)}
           >
-            <View style={styles.noticeIconCircle}>
-              <Ionicons name="megaphone-outline" size={18} color="#2563EB" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <View style={styles.cardHeaderRow}>
-                <Text style={styles.previewTitle} numberOfLines={1}>
-                  {notice.title}
-                </Text>
-                <Text style={styles.dateBadgeText}>{formatNoticeDate(notice.createdAt)}</Text>
-              </View>
-              <Text style={styles.previewSubtitle} numberOfLines={2}>
-                {notice.description}
-              </Text>
-            </View>
+            <Ionicons name="notifications" size={22} color={Colors.primary || "#2563EB"} />
+            {allNoticesList.length > 0 && <View style={styles.notificationBadgeDot} />}
           </TouchableOpacity>
-        ))
-      )}
-
-      {/* Upcoming Events Preview Section */}
-      <View style={[styles.sectionHeaderRow, { marginTop: 12 }]}>
-        <Text style={styles.sectionTitle}>Upcoming Events</Text>
-      </View>
-
-      {loadingEvents ? (
-        <ActivityIndicator size="small" color={Colors.primary || "#2563EB"} style={styles.sectionLoader} />
-      ) : events.length === 0 ? (
-        <View style={styles.emptyBox}>
-          <Text style={styles.emptyText}>No upcoming events scheduled</Text>
         </View>
-      ) : (
-        events.map((event, index) => {
-          const dateObj = parseEventDate(event.eventDate);
-          return (
-            <View 
-              key={event.eventId || index} 
-              style={styles.previewCard}
-            >
-              <View style={styles.eventDateBox}>
-                <Text style={styles.eventDateDay}>{dateObj.day}</Text>
-                <Text style={styles.eventDateMonth}>{dateObj.month}</Text>
-              </View>
-              <View style={{ flex: 1, justifyContent: "center" }}>
-                <Text style={styles.previewTitle} numberOfLines={1}>
-                  {event.eventName}
-                </Text>
-                <View style={styles.venueRow}>
-                  <Ionicons name="location-outline" size={13} color="#64748B" />
-                  <Text style={styles.venueText} numberOfLines={1}>
-                    {event.venue || "Campus Venue"}
+
+        {/* Attendance Summary Banner Card */}
+        <TouchableOpacity 
+          style={styles.attendanceCard}
+          activeOpacity={0.9}
+          onPress={() => navigation.navigate("AttendanceDetail")}
+        >
+          <View style={styles.attendanceHeader}>
+            <View style={styles.attendanceTitleRow}>
+              <Ionicons name="stats-chart" size={18} color="#93C5FD" style={{ marginRight: 8 }} />
+              <Text style={styles.attendanceTitle}>Attendance Overview</Text>
+            </View>
+            <Ionicons name="chevron-forward-circle" size={22} color="#FFF" />
+          </View>
+
+          {loadingAttendance ? (
+            <ActivityIndicator color="#FFF" style={{ marginVertical: 20 }} />
+          ) : (
+            <>
+              <View style={styles.attendanceValueRow}>
+                <Text style={styles.attendanceValue}>{attendancePercentage}%</Text>
+                <View style={[styles.feedbackBadge, { backgroundColor: "rgba(255, 255, 255, 0.15)" }]}>
+                  <Text style={[styles.attendanceFeedback, { color: feedback.color }]}>
+                    {feedback.message}
                   </Text>
                 </View>
               </View>
-            </View>
-          );
-        })
-      )}
-      
-      <View style={{ height: 35 }} />
 
-      {/* Notification Center Modal */}
-      <Modal
-        visible={notificationModalVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setNotificationModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeaderRow}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                <Ionicons name="notifications" size={20} color="#2563EB" />
-                <Text style={styles.modalHeading}>Notification Center</Text>
+              <View style={styles.progressBackground}>
+                <View style={[styles.progressFill, { width: `${Math.min(attendancePercentage, 100)}%` }]} />
               </View>
-              <TouchableOpacity 
-                style={styles.closeModalBtn}
-                onPress={() => setNotificationModalVisible(false)}
+
+              <Text style={styles.tapDetailsText}>Tap to view subject breakdown</Text>
+            </>
+          )}
+        </TouchableOpacity>
+
+        {/* Results Highlight Banner */}
+        <TouchableOpacity
+          style={styles.resultsBanner}
+          activeOpacity={0.88}
+          onPress={() => navigation.navigate("Results")}
+        >
+          <View style={styles.resultsBannerLeft}>
+            <View style={styles.ribbonIconBg}>
+              <Ionicons name="ribbon" size={22} color="#FFF" />
+            </View>
+            <View style={{ marginLeft: 12 }}>
+              <Text style={styles.resultsTitle}>Grades & Academic Results</Text>
+              <Text style={styles.resultsSub}>Check evaluated marks & grades</Text>
+            </View>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color="#2563EB" />
+        </TouchableOpacity>
+
+        {/* Quick Access Grid */}
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionTitle}>Quick Access</Text>
+        </View>
+        <View style={styles.grid}>
+          <TouchableOpacity
+            style={[styles.actionCard, { borderLeftColor: "#2563EB" }]}
+            activeOpacity={0.85}
+            onPress={() => navigation.getParent()?.navigate("Subjects")}
+          >
+            <View style={[styles.actionIconBg, { backgroundColor: "#EFF6FF" }]}>
+              <Ionicons name="library" size={26} color="#2563EB" />
+            </View>
+            <View style={styles.actionTextContainer}>
+              <Text style={styles.actionText}>Subjects</Text>
+              <Text style={styles.actionSubText}>View enrolled modules</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color="#CBD5E1" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionCard, { borderLeftColor: "#16A34A" }]}
+            activeOpacity={0.85}
+            onPress={() => navigation.getParent()?.navigate("Subjects")}
+          >
+            <View style={[styles.actionIconBg, { backgroundColor: "#F0FDF4" }]}>
+              <Ionicons name="document-text" size={26} color="#16A34A" />
+            </View>
+            <View style={styles.actionTextContainer}>
+              <Text style={styles.actionText}>Assignments</Text>
+              <Text style={styles.actionSubText}>Pending & submissions</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color="#CBD5E1" />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.actionCard, { borderLeftColor: "#D97706" }]}
+            activeOpacity={0.85}
+            onPress={() => navigation.navigate("Results")}
+          >
+            <View style={[styles.actionIconBg, { backgroundColor: "#FEF3C7" }]}>
+              <Ionicons name="bar-chart" size={26} color="#D97706" />
+            </View>
+            <View style={styles.actionTextContainer}>
+              <Text style={styles.actionText}>Results</Text>
+              <Text style={styles.actionSubText}>Scores & GPA tracking</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color="#CBD5E1" />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.actionCard, { borderLeftColor: "#9333EA" }]}
+            activeOpacity={0.85}
+            onPress={handleNavigateFaculty}
+          >
+            <View style={[styles.actionIconBg, { backgroundColor: "#F3E8FF" }]}>
+              <Ionicons name="people" size={26} color="#9333EA" />
+            </View>
+            <View style={styles.actionTextContainer}>
+              <Text style={styles.actionText}>Faculty</Text>
+              <Text style={styles.actionSubText}>Directory & contact</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color="#CBD5E1" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Recent Notices Preview Section */}
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionTitle}>Recent Notices</Text>
+          <TouchableOpacity onPress={handleNavigateNotices}>
+            <Text style={styles.viewAllText}>View All</Text>
+          </TouchableOpacity>
+        </View>
+
+        {loadingNotices ? (
+          <ActivityIndicator size="small" color={Colors.primary || "#2563EB"} style={styles.sectionLoader} />
+        ) : notices.length === 0 ? (
+          <View style={styles.emptyBox}>
+            <Text style={styles.emptyText}>No recent notices posted</Text>
+          </View>
+        ) : (
+          notices.map((notice, index) => (
+            <TouchableOpacity 
+              key={notice.noticeId || index} 
+              style={styles.previewCard}
+              activeOpacity={0.85}
+              onPress={handleNavigateNotices}
+            >
+              <View style={styles.noticeIconCircle}>
+                <Ionicons name="megaphone-outline" size={18} color="#2563EB" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <View style={styles.cardHeaderRow}>
+                  <Text style={styles.previewTitle} numberOfLines={1}>
+                    {notice.title}
+                  </Text>
+                  <Text style={styles.dateBadgeText}>{formatNoticeDate(notice.createdAt)}</Text>
+                </View>
+                <Text style={styles.previewSubtitle} numberOfLines={2}>
+                  {notice.description}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          ))
+        )}
+
+        {/* Upcoming Events Preview Section */}
+        <View style={[styles.sectionHeaderRow, { marginTop: 12 }]}>
+          <Text style={styles.sectionTitle}>Upcoming Events</Text>
+        </View>
+
+        {loadingEvents ? (
+          <ActivityIndicator size="small" color={Colors.primary || "#2563EB"} style={styles.sectionLoader} />
+        ) : events.length === 0 ? (
+          <View style={styles.emptyBox}>
+            <Text style={styles.emptyText}>No upcoming events scheduled</Text>
+          </View>
+        ) : (
+          events.map((event, index) => {
+            const dateObj = parseEventDate(event.eventDate);
+            return (
+              <View 
+                key={event.eventId || index} 
+                style={styles.previewCard}
               >
-                <Ionicons name="close" size={20} color="#64748B" />
+                <View style={styles.eventDateBox}>
+                  <Text style={styles.eventDateDay}>{dateObj.day}</Text>
+                  <Text style={styles.eventDateMonth}>{dateObj.month}</Text>
+                </View>
+                <View style={{ flex: 1, justifyContent: "center" }}>
+                  <Text style={styles.previewTitle} numberOfLines={1}>
+                    {event.eventName}
+                  </Text>
+                  <View style={styles.venueRow}>
+                    <Ionicons name="location-outline" size={13} color="#64748B" />
+                    <Text style={styles.venueText} numberOfLines={1}>
+                      {event.venue || "Campus Venue"}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            );
+          })
+        )}
+        
+        <View style={{ height: 35 }} />
+
+        {/* Notification Center Modal */}
+        <Modal
+          visible={notificationModalVisible}
+          animationType="slide"
+          transparent={true}
+          onRequestClose={() => setNotificationModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeaderRow}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                  <Ionicons name="notifications" size={20} color="#2563EB" />
+                  <Text style={styles.modalHeading}>Notification Center</Text>
+                </View>
+                <TouchableOpacity 
+                  style={styles.closeModalBtn}
+                  onPress={() => setNotificationModalVisible(false)}
+                >
+                  <Ionicons name="close" size={20} color="#64748B" />
+                </TouchableOpacity>
+              </View>
+
+              <FlatList
+                data={allNoticesList}
+                keyExtractor={(item, index) => item.noticeId?.toString() || index.toString()}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingVertical: 10 }}
+                ListEmptyComponent={
+                  <View style={{ padding: 40, alignItems: "center" }}>
+                    <Ionicons name="notifications-off-outline" size={48} color="#CBD5E1" />
+                    <Text style={{ color: "#94A3B8", marginTop: 10, fontSize: 14 }}>No new notifications</Text>
+                  </View>
+                }
+                renderItem={({ item }) => (
+                  <View style={styles.notificationItemCard}>
+                    <View style={styles.notificationItemIcon}>
+                      <Ionicons name="flash-outline" size={16} color="#2563EB" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 2 }}>
+                        <Text style={styles.notificationItemTitle} numberOfLines={1}>{item.title}</Text>
+                        <Text style={styles.notificationItemDate}>{formatNoticeDate(item.createdAt)}</Text>
+                      </View>
+                      <Text style={styles.notificationItemDesc} numberOfLines={3}>{item.description}</Text>
+                    </View>
+                  </View>
+                )}
+              />
+
+              <TouchableOpacity 
+                style={styles.modalBottomBtn}
+                onPress={() => {
+                  setNotificationModalVisible(false);
+                  handleNavigateNotices();
+                }}
+              >
+                <Text style={styles.modalBottomBtnText}>View Full Notice Board</Text>
               </TouchableOpacity>
             </View>
-
-            <FlatList
-              data={allNoticesList}
-              keyExtractor={(item, index) => item.noticeId?.toString() || index.toString()}
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ paddingVertical: 10 }}
-              ListEmptyComponent={
-                <View style={{ padding: 40, alignItems: "center" }}>
-                  <Ionicons name="notifications-off-outline" size={48} color="#CBD5E1" />
-                  <Text style={{ color: "#94A3B8", marginTop: 10, fontSize: 14 }}>No new notifications</Text>
-                </View>
-              }
-              renderItem={({ item }) => (
-                <View style={styles.notificationItemCard}>
-                  <View style={styles.notificationItemIcon}>
-                    <Ionicons name="flash-outline" size={16} color="#2563EB" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 2 }}>
-                      <Text style={styles.notificationItemTitle} numberOfLines={1}>{item.title}</Text>
-                      <Text style={styles.notificationItemDate}>{formatNoticeDate(item.createdAt)}</Text>
-                    </View>
-                    <Text style={styles.notificationItemDesc} numberOfLines={3}>{item.description}</Text>
-                  </View>
-                </View>
-              )}
-            />
-
-            <TouchableOpacity 
-              style={styles.modalBottomBtn}
-              onPress={() => {
-                setNotificationModalVisible(false);
-                handleNavigateNotices();
-              }}
-            >
-              <Text style={styles.modalBottomBtnText}>View Full Notice Board</Text>
-            </TouchableOpacity>
           </View>
-        </View>
-      </Modal>
-    </ScrollView>
+        </Modal>
+      </ScrollView>
+
+      <ChatbotLauncher onPress={() => navigation.navigate("Chatbot")} />
+    </View>
   );
 }
 
