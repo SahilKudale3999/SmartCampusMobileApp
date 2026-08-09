@@ -15,6 +15,7 @@ import com.smartcampus.dto.FacultyResponse;
 import com.smartcampus.dto.StudentRequest;
 import com.smartcampus.dto.StudentResponse;
 import com.smartcampus.dto.SubjectResponse;
+import com.smartcampus.entity.Assignment;
 import com.smartcampus.entity.Course;
 import com.smartcampus.entity.Faculty;
 import com.smartcampus.entity.Student;
@@ -90,14 +91,9 @@ public class FacultyService {
 	        return ModelMapper.toFacultyResponse(facultyRepository.save(faculty));
 	    }
 	 
-	 @Transactional
-	    public void deleteFaculty(Integer id) {
-	        facultyRepository.delete(findFaculty(id));
-	    }
-	 
 	 public FacultyResponse getFacultyByDepartment(String department) {
 	        Faculty faculty = facultyRepository.findByDepartment(department)
-	                .orElseThrow(() -> new ResourceNotFoundException("Student not found with roll no: " +department ));
+	                .orElseThrow(() -> new ResourceNotFoundException("Faculty not found in department: " + department));
 	        return toResponse(faculty);
 	    }
 	 
@@ -111,6 +107,31 @@ public class FacultyService {
 		            .department(faculty.getDepartment())
 		            .build();
 	    }
+	 
+	 @Transactional
+	 public void deleteFaculty(Integer id) {
+	     Faculty faculty = findFaculty(id);
+
+	     List<Subject> subjects = subjectRepository.findByFacultyFacultyId(id);
+	     List<Integer> subjectIds = subjects.stream().map(Subject::getSubjectId).toList();
+
+	     if (!subjectIds.isEmpty()) {
+	         List<Integer> assignmentIds = assignmentRepository.findBySubjectSubjectIdIn(subjectIds)
+	                 .stream()
+	                 .map(Assignment::getAssignmentId)
+	                 .toList();
+
+	         if (!assignmentIds.isEmpty()) {
+	             submissionRepository.deleteByAssignmentAssignmentIdIn(assignmentIds);
+	         }
+
+	         assignmentRepository.deleteBySubjectSubjectIdIn(subjectIds);
+	         attendanceRepository.deleteBySubjectSubjectIdIn(subjectIds);
+	         subjectRepository.deleteAll(subjects);
+	     }
+
+	     facultyRepository.delete(faculty);
+	 }
 	 
 	 
 	 public FacultyDashboardResponse getFacultyDashboard(Integer facultyId) {

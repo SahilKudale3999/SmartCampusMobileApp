@@ -11,4 +11,5 @@ public interface NoticeRepository extends JpaRepository<Notice, Integer>{
 	long deleteByCreatedAtBefore(LocalDateTime dateTime);
 	long countByCreatedByUserId(Integer userId);
 	
+	void deleteByCreatedBy(Integer userId);
 }

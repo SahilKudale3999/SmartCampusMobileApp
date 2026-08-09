@@ -8,4 +8,5 @@ import java.util.List;
 public interface AssignmentRepository extends JpaRepository<Assignment, Integer> {
     List<Assignment> findBySubjectSubjectId(Integer subjectId);
     List<Assignment> findBySubjectSubjectIdIn(List<Integer> subjectIds);
+    void deleteBySubjectSubjectIdIn(List<Integer> subjectIds);
 }
