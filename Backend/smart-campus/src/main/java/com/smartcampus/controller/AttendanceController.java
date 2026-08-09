@@ -66,4 +66,9 @@ public class AttendanceController {
             @RequestParam Integer subjectId) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Attendance percentage fetched", attendanceService.getAttendancePercentage(studentId, subjectId)));
     }
+    
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<AttendanceResponse>>> getAllAttendance() {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Attendance fetched", attendanceService.getAllAttendance()));
+    }
 }

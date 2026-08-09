@@ -7,12 +7,19 @@ import com.smartcampus.dto.UserRequest;
 import com.smartcampus.dto.UserResponse;
 import com.smartcampus.entity.Faculty;
 import com.smartcampus.entity.Student;
+import com.smartcampus.entity.Subject;
 import com.smartcampus.entity.User;
 import com.smartcampus.exception.BadRequestException;
 import com.smartcampus.exception.ResourceNotFoundException;
 import com.smartcampus.mapper.ModelMapper;
+import com.smartcampus.repository.AssignmentRepository;
+import com.smartcampus.repository.AttendanceRepository;
+import com.smartcampus.repository.EventRepository;
 import com.smartcampus.repository.FacultyRepository;
+import com.smartcampus.repository.NoticeRepository;
 import com.smartcampus.repository.StudentRepository;
+import com.smartcampus.repository.SubjectRepository;
+import com.smartcampus.repository.SubmissionRepository;
 import com.smartcampus.repository.UserRepository;
 import com.smartcampus.util.Role;
 
@@ -30,9 +37,14 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    
     private final StudentRepository studentRepository;
     private final FacultyRepository facultyRepository;
+    private final SubjectRepository subjectRepository;
+    private final AssignmentRepository assignmentRepository;
+    private final SubmissionRepository submissionRepository;
+    private final AttendanceRepository attendanceRepository;
+    private final NoticeRepository noticeRepository;
+    private final EventRepository eventRepository;
 
     @Transactional
     public UserResponse createUser(UserRequest request) {
@@ -70,7 +82,43 @@ public class UserService {
 
     @Transactional
     public void deleteUser(Integer id) {
-        userRepository.delete(findUser(id));
+        User user = findUser(id);
+
+        if (user.getRole() == Role.STUDENT) {
+            studentRepository.findByUserUserId(id).ifPresent(student -> {
+                Integer studentId = student.getStudentId();
+                submissionRepository.deleteByStudentStudentId(studentId);
+                attendanceRepository.deleteByStudentStudentId(studentId);
+                studentRepository.delete(student);
+            });
+        } else if (user.getRole() == Role.FACULTY) {
+            facultyRepository.findByUserId(id).ifPresent(faculty -> {
+                Integer facultyId = faculty.getFacultyId();
+                List<Subject> subjects = subjectRepository.findByFacultyFacultyId(facultyId);
+                List<Integer> subjectIds = subjects.stream().map(Subject::getSubjectId).toList();
+
+                if (!subjectIds.isEmpty()) {
+                    List<Integer> assignmentIds = assignmentRepository
+                            .findBySubjectSubjectIdIn(subjectIds)
+                            .stream()
+                            .map(a -> a.getAssignmentId())
+                            .toList();
+
+                    if (!assignmentIds.isEmpty()) {
+                        submissionRepository.deleteByAssignmentAssignmentIdIn(assignmentIds);
+                    }
+                    assignmentRepository.deleteBySubjectSubjectIdIn(subjectIds);
+                    attendanceRepository.deleteBySubjectSubjectIdIn(subjectIds);
+                    subjectRepository.deleteAll(subjects);
+                }
+                facultyRepository.delete(faculty);
+            });
+        } else if (user.getRole() == Role.ADMIN) {
+            noticeRepository.deleteByCreatedBy(id);
+            eventRepository.deleteByCreatedBy(id);
+        }
+
+        userRepository.delete(user);
     }
 
     @Transactional

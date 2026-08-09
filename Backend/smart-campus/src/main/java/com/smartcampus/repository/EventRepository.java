@@ -12,5 +12,8 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
 	
 	List<Event> findByEventDateGreaterThanEqualOrderByEventDateAsc(LocalDate eventDate);
 	
+	
 	long deleteByEventDateBefore(LocalDate date);
+	
+	void deleteByCreatedBy(Integer userId);
 }

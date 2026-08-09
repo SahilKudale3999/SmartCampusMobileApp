@@ -120,4 +120,12 @@ public class AttendanceService {
                 .attendanceDate(attendance.getAttendanceDate())
                 .build();
     }
+    
+    
+    public List<AttendanceResponse> getAllAttendance() {
+        return attendanceRepository.findAll()
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
 }

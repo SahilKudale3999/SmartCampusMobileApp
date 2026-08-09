@@ -16,4 +16,8 @@ public interface SubmissionRepository extends JpaRepository<Submission, Integer>
     long countPendingBySubjectIds(@Param("subjectIds") List<Integer> subjectIds);
     
     List<Submission> findByAssignmentSubjectSubjectIdIn(List<Integer> subjectIds);
+    
+    void deleteByAssignmentAssignmentIdIn(List<Integer> assignmentIds);
+    
+    void deleteByStudentStudentId(Integer studentId);
 }
